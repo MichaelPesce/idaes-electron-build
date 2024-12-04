@@ -3,7 +3,7 @@ name: App build
 on:
   push:
     branches:
-      - "build"
+      - "initial-cleanup"
 
 defaults:
   run:

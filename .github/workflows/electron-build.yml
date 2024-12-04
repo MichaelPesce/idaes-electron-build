@@ -36,6 +36,11 @@ jobs:
         run: |
             echo project=watertap >> .env
 
+      - name: Set private ssh key (for cloning repo)
+        run: |
+          eval `ssh-agent -s`
+          ssh-add - <<< '${{ secrets.PRIVATE_IFP_UI_KEY }}'
+
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
         # run: git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .

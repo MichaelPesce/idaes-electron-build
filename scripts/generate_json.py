@@ -1,7 +1,8 @@
 from datetime import datetime
 import argparse
 import json
-
+import pathlib
+import os
 
 JSON_FRAMEWORK = {
   "name": "idaes-flowsheet-processor-ui",
@@ -108,17 +109,7 @@ JSON_FRAMEWORK = {
 def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--project", help="Project to create json file for. If not provided, default is WaterTAP.")
-    args = parser.parse_args()
-    project = args.project
-    if project is None:
-        project = "watertap"
-    elif project.lower() == "idaes":
-        project = "idaes"
-    else:
-        project = project.lower()
+def generatePackageJson(project=None, output_path="electron/package.json"):
 
     version = getVersionDate()
     package_json = JSON_FRAMEWORK.copy()
@@ -144,6 +135,27 @@ if __name__ == "__main__":
     package_json["build"]["win"]["icon"] = icon
     package_json["build"]["linux"]["icon"] = icon
 
-    output_path = "electron/package.json"
     with open(output_path, "w") as f:
         json.dump(package_json, f)
+
+def setEnvVariables(project = None):
+    working_dir = pathlib.Path(__file__).parent.resolve()
+    hook_env_path = os.path.join(working_dir,"../pyinstaller/hooks/.env")
+
+    with open(hook_env_path, "w") as f:
+        f.write(f"project={project}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--project", help="Project to create json file for. If not provided, default is WaterTAP.")
+    args = parser.parse_args()
+    project = args.project
+    valid_projects = ["watertap", "prommis", "idaes"]
+    if project is not None:
+        project = project.lower()
+    if project not in valid_projects:
+        print(f"project provided: {project} is not a valid project. Must be one of {valid_projects}. Defaulting to watertap")
+        project = "watertap"
+
+    generatePackageJson(project)
+    setEnvVariables(project)

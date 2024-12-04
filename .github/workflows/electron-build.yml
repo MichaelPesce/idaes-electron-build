@@ -3,7 +3,7 @@ name: App build
 on:
   push:
     branches:
-      - "initial-cleanup"
+      - "build"
 
 defaults:
   run:
@@ -80,7 +80,7 @@ jobs:
         run: pyinstaller -y --clean --distpath ../electron/py_dist main.spec
 
       - name: Build Frontend
-        run: npm --prefix electron/idaes-flowsheet-processor-ui/frontend run build-frontend-win
+        run: npm --prefix electron/idaes-flowsheet-processor-ui/frontend run build
 
       - name: Build Windows Distribution
         run: npm --prefix electron run electron-build-win

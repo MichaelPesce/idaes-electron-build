@@ -3,3 +3,4 @@ build/
 dist/
 .DS_Store
 __pycache__
+idaes-flowsheet-processor-ui/

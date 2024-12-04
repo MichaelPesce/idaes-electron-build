@@ -2,7 +2,7 @@ import importlib
 from pathlib import Path
 import re
 import os
-print(f'running hook-main boii')
+print(f'running hook-ifp boii')
 imports = set()
 datas = []
 
@@ -90,7 +90,7 @@ for package in ["pyomo", "scipy", "idaes_flowsheet_processor_ui"]:
 
 hiddenimports = list(imports)
 # add lorem ipsum.txt for jaraco
-datas.append(('internal/assets/Lorem ipsum.txt', 'jaraco/text'))
+datas.append(('./Lorem ipsum.txt', 'jaraco/text'))
 
 pyomo_imports = [
     "networkx",

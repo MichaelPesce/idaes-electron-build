@@ -1,6 +1,8 @@
 .env
 build/
 dist/
+py_dist/
 .DS_Store
 __pycache__
 idaes-flowsheet-processor-ui/
+node_modules/

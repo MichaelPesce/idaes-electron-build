@@ -87,7 +87,8 @@
       "build/**/*",
       "py_dist/**/*",
       "package.json",
-      "setup-extensions-dist/**/*"
+      "setup-extensions-dist/**/*",
+      "main.js"
     ],
     "directories": {
       "buildResources": "assets"

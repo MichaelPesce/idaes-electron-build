@@ -1,6 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
-import watertap
 from pathlib import Path 
 import os
 

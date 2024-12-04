@@ -1,5 +1,5 @@
 {
-  "name": "watertap-ui",
+  "name": "idaes-flowsheet-processor-ui",
   "author": "Michael Pesce <mpesce@lbl.gov>",
   "version": "24.11.20",
   "private": true,
@@ -63,15 +63,15 @@
   },
   "homepage": ".",
   "build": {
-    "appId": "com.electron.watertap-ui",
+    "appId": "com.electron.idaes-flowsheet-processor-ui",
     "extends": null,
     "asar": false,
-    "productName": "WaterTAP-UI",
+    "productName": "IDAES-Flowsheet-Processor",
     "afterSign": "build/notarize.js",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "WaterTAP-UI_24.11.20_win64.exe"
+      "artifactName": "IDAES-Flowsheet-Processor_24.11.20_win64.exe"
     },
     "deb": {
       "depends": [
@@ -80,7 +80,7 @@
         "liblapack3",
         "libblas3"
       ],
-      "artifactName": "watertap-ui_0.1.0_amd64.deb"
+      "artifactName": "IDAES-Flowsheet-Processor_0.1.0_amd64.deb"
     },
     "files": [
       "dist/**/*",
@@ -107,7 +107,7 @@
     "win": {
       "target": "nsis",
       "icon": "build/nawi-logo.ico",
-      "artifactName": "WaterTAP-UI_24.11.20_win64.exe"
+      "artifactName": "IDAES-Flowsheet-Processor_24.11.20_win64.exe"
     },
     "linux": {
       "target": "Deb",

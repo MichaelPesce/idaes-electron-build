@@ -13,7 +13,7 @@ ENTRYPOINTS_PACKAGE = "wheel"
 
 def update_entry_points(project):
 
-    ## temporarily use workarounds while storing flowsheet entrypoints in watertap-ui
+    ## temporarily use workarounds
     if project == "prommis":
         conda_package_name = "watertap_ui"
         entry_points_project_name = "prommis"

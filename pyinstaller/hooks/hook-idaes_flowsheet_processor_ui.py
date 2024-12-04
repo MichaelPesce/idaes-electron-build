@@ -12,7 +12,6 @@ datas = []
 project = os.getenv("project")
 print(f"project is {project}")
 
-# add all modules to watertap modules hidden imports
 packages = ["pyomo", "scipy", "idaes_flowsheet_processor_ui", project]
 for package in packages:
     pkg = importlib.import_module(package)

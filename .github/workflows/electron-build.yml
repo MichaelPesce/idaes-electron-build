@@ -3,7 +3,7 @@ name: App build
 on:
   push:
     branches:
-      - "build"
+      - "initial-cleanup"
 
 defaults:
   run:
@@ -30,6 +30,13 @@ jobs:
       - name: Install Azure Signtool
         run: |
           dotnet tool install --global AzureSignTool
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%y.%m.%d')"
+
+      - name: test date output
+        run: echo ${{ steps.date.outputs.date }}
 
       - name: Add project to .env file (for pyinstaller)
         working-directory: ./pyinstaller/hooks
@@ -87,7 +94,7 @@ jobs:
 
       - name: Sign Windows Distribution
         run: |
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/IDAES-Flowsheet-Processor_24.12.04_win64.exe
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/IDAES-Flowsheet-Processor_${{ steps.date.outputs.date }}_win64.exe
 
 
       - name: Upload artifact for windows build
@@ -96,4 +103,4 @@ jobs:
         with:
             name: windows-dist
             path: |
-              electron/dist/IDAES-Flowsheet-Processor_24.12.04_win64.exe
+              electron/dist/IDAES-Flowsheet-Processor_${{ steps.date.outputs.date }}_win64.exe

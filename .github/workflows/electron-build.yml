@@ -3,7 +3,7 @@ name: App build
 on:
   push:
     branches:
-      - "initial-cleanup"
+      - "build"
 
 defaults:
   run:
@@ -34,9 +34,6 @@ jobs:
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%y.%m.%d')"
-
-      - name: test date output
-        run: echo ${{ steps.date.outputs.date }}
 
       - name: Add project to .env file (for pyinstaller)
         working-directory: ./pyinstaller/hooks

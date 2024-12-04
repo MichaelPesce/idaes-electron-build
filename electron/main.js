@@ -80,7 +80,7 @@ function createWindow() {
   win.loadURL(
     isDev
       ? uiURL
-      : `file://${path.join(__dirname, '../build/index.html')}`
+      : `file://${path.join(__dirname, './build/index.html')}`
   )
 }
 
@@ -88,7 +88,7 @@ const installExtensions = () => {
 
   try{
     installationProcess = spawn(
-      path.join(__dirname, "../py_dist/main/main"),
+      path.join(__dirname, "./py_dist/main/main"),
       [
         "install"
       ]
@@ -137,7 +137,7 @@ const startServer = () => {
     } else {
       try {
       backendProcess = spawn(
-        path.join(__dirname, "../py_dist/main/main"),
+        path.join(__dirname, "./py_dist/main/main"),
         [
           ""
         ]

@@ -31,37 +31,25 @@ jobs:
         run: |
           dotnet tool install --global AzureSignTool
 
+        ## use this for naming package
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%y.%m.%d')"
-
-      - name: Add project to .env file (for pyinstaller)
-        working-directory: ./pyinstaller/hooks
-        run: |
-            echo project=watertap >> .env
-
-      - name: Set private ssh key (for cloning repo)
-        run: |
-          eval `ssh-agent -s`
-          ssh-add - <<< '${{ secrets.PRIVATE_IFP_UI_KEY }}'
 
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
         # run: git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
         run: git clone https://github.com/MichaelPesce/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout initial-cleanup && pip install --progress-bar off .
 
-      - name: Add theme to .env file
-        working-directory: ./electron/idaes-flowsheet-processor-ui/frontend
-        run: |
-            echo REACT_APP_THEME=watertap >> .env
+        ## TODO: make this project agnostic
+        ## creates package.json and .env files
+      - name: Set configuration files
+        run: python scripts/set_configuration.py -p watertap
 
       - name: Install idaes-flowsheet-processor-ui Python package
         working-directory: ./electron/idaes-flowsheet-processor-ui
         run: |
           pip install --progress-bar off .
-
-      - name: Create package.json file
-        run: python scripts/generate_json.py -p watertap
 
       - name: Install Electron JS dependencies
         run: |
@@ -71,13 +59,16 @@ jobs:
         run: |
           npm --prefix electron/idaes-flowsheet-processor-ui/frontend clean-install
 
-      - name: Install Watertap locally ## this might not need to be installed locally anymore; leave it for now
+        ## TODO: make this install the proper project package
+        ## might not need to be installed locally anymore
+      - name: Install Watertap locally 
         working-directory: ../
         run: git clone https://github.com/watertap-org/watertap.git && cd watertap && pip install --progress-bar off .
 
       - name: Get idaes extensions
         run: idaes get-extensions
 
+        ## TODO: make this project agnostic
       - name: Transfer Entry points
         run: |
           python move_entrypoints.py -p watertap

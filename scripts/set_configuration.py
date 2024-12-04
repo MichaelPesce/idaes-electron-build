@@ -109,12 +109,12 @@ JSON_FRAMEWORK = {
 def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
-def generatePackageJson(project=None, output_path="electron/package.json"):
+def generatePackageJson(project=None, output_path="electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
 
     version = getVersionDate()
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = version
-    package_json["author"] = "Michael Pesce <mpesce@lbl.gov>"
+    package_json["author"] = author
 
 
     package_json["build"]["win"]["target"] = "nsis"
@@ -141,8 +141,12 @@ def generatePackageJson(project=None, output_path="electron/package.json"):
 def setEnvVariables(project = None):
     working_dir = pathlib.Path(__file__).parent.resolve()
     hook_env_path = os.path.join(working_dir,"../pyinstaller/hooks/.env")
+    react_app_env_path = os.path.join(working_dir,"./electron/idaes-flowsheet-processor-ui/frontend/.env")
 
     with open(hook_env_path, "w") as f:
+        f.write(f"project={project}")
+
+    with open(react_app_env_path, "w") as f:
         f.write(f"project={project}")
 
 if __name__ == "__main__":

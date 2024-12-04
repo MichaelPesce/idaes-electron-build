@@ -23,8 +23,10 @@ JSON_FRAMEWORK = {
     "electron-notarize": "^1.2.1"
   },
   "scripts": {
-    "move-frontend-build-win": "move /Y ui/build build",
-    "build-backend": "cd ../backend/app && pyinstaller -y --clean --distpath ../../electron/py_dist main.spec",
+    "move-frontend-build-win": "move /Y idaes-flowsheet-processor-ui/frontend/build build",
+    "build-frontend": "npm --prefix idaes-flowsheet-processor-ui/frontend run build",
+    "build-frontend-win": "npm --prefix idaes-flowsheet-processor-ui/frontend run build && npm run move-frontend-build-win || npm run move-frontend-build-win",
+    "build-backend": "cd ../pyinstaller && pyinstaller -y --clean --distpath ../electron/py_dist main.spec",
     "build-replace-backend": "npm run remove-previous-backend-build && npm run build-backend || npm run build-backend",
     "build-replace-backend-win": "npm run remove-previous-backend-build-win && npm run build-backend || npm run build-backend",
     "electron-build-mac": "npm run remove-previous-dist && electron-builder -m || electron-builder -m",
@@ -36,7 +38,7 @@ JSON_FRAMEWORK = {
     "remove-previous-backend-build-win": "rd /S /Q py_dist",
     "remove-previous-dist": "rm -r dist/*",
     "remove-previous-dist-win": "rd /S /Q dist",
-    "get-extensions-installer": "cd ../backend/app && pyinstaller -y --clean --distpath ../../electron/setup-extensions-dist setup-extensions.spec"
+    "get-extensions-installer": "cd ../pyinstaller && pyinstaller -y --clean --distpath ../electron/setup-extensions-dist setup-extensions.spec"
   },
   "eslintConfig": {
     "extends": [

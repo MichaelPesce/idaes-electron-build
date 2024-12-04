@@ -28,40 +28,47 @@ This will install the correct runtime versions of both the backend (Python) and 
 From the root directory, run the following python file:
 
 ```sh
-python scripts/generate_json.py -p <project-you-wish-to-build>
+python scripts/set_configuration.py -p <project-you-wish-to-build>
 ```
 
-This create a package.json file that will be used to create the Electron package. Project options are watertap, prommis, and idaes.
+This will create a package.json file environment files that are required to create the Electron package. Project options are watertap, prommis, and idaes.
 
 # Building production Electron app
 
 The following steps assume that:
 
 1. `conda` is already installed and configured
-2. The WaterTAP-UI package has been succesfully installed
-3. Watertap is cloned and installed locally. This is required for transferring data files (png and yaml)
-4. Watertap and Watertap-ui directories must be inside of the same parent directory. 
-5. `watertap-ui-env` Conda environment is active
+2. `flowsheet-processor-env` Conda environment is active
 
 ### 1. Transfer Entry points
 
 ```sh
-cd <watertap-ui-path>/electron
-npm --prefix electron run move-entrypoints
+cd <idaes-electron-build>
+python scripts/move_entrypoints.py
 ```
 
-### 2. Create build distribution
+### 2. Install IDAES Flowsheet Processor Locally
+
+```console
+cd <idaes-electron-build>/electron
+git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
+```
+
+### 3. Install proper project (IDAES, WaterTAP, or PROMMIS)
+
+```console
+pip install <project>
+```
+
+### 4. Create build distribution
 
 ### Windows:
 #### Requirements: 
 1) Windows operating system
-2) The following environment variables must be set
-    - CSC_LINK: "<path-to-valid-codesigning-certificate.p12>"
-    - CSC_KEY_PASSWORD: "<codesign-account-password>"
 
 #### Command:
 ```console
-cd <watertap-ui-path>/electron
+cd <idaes-electron-build>/electron
 npm run dist:win
 ```
 
@@ -74,6 +81,6 @@ npm run dist:win
 #### Command:
 
 ```console
-cd <watertap-ui-path>/electron
+cd <idaes-electron-build>/electron
 npm run dist:mac
 ```

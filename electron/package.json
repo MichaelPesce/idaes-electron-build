@@ -3,7 +3,7 @@
   "author": "Michael Pesce <mpesce@lbl.gov>",
   "version": "24.12.04",
   "private": true,
-  "main": "build/main.js",
+  "main": "main.js",
   "dependencies": {
     "@electron/remote": "^2.0.8",
     "@emotion/react": "^11.11.4",
@@ -67,7 +67,7 @@
     "extends": null,
     "asar": false,
     "productName": "IDAES-Flowsheet-Processor",
-    "afterSign": "build/notarize.js",
+    "afterSign": "notarize.js",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,

@@ -59,12 +59,12 @@ jobs:
         run: |
           npm --prefix electron/idaes-flowsheet-processor-ui/frontend clean-install
 
-      - name: Get idaes extensions
-        run: idaes get-extensions
-
       - name: Install Watertap locally ## this might not need to be installed locally anymore; leave it for now
         working-directory: ../
         run: git clone https://github.com/watertap-org/watertap.git && cd watertap && pip install --progress-bar off .
+
+      - name: Get idaes extensions
+        run: idaes get-extensions
 
       - name: Transfer Entry points
         run: |

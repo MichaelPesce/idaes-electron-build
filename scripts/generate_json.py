@@ -136,7 +136,7 @@ if __name__ == "__main__":
     ## add icons
     if project == "watertap":
         icon = "build/nawi-logo.ico"
-    else:
+    else: ## TODO: create logos for each project
         icon = "build/nawi-logo.ico"
     
 
@@ -144,5 +144,6 @@ if __name__ == "__main__":
     package_json["build"]["win"]["icon"] = icon
     package_json["build"]["linux"]["icon"] = icon
 
-    with open('package-test.json', 'w') as f:
+    output_path = "electron/package.json"
+    with open(output_path, "w") as f:
         json.dump(package_json, f)

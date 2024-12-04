@@ -60,6 +60,9 @@ jobs:
         run: |
           pip install --progress-bar off .
 
+      - name: Create package.json file
+        run: python scripts/generate_json.py -p watertap
+
       - name: Install Electron JS dependencies
         run: |
           npm --prefix electron clean-install

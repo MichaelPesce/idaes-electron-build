@@ -2,12 +2,19 @@ import importlib
 from pathlib import Path
 import re
 import os
-print(f'running hook-ifp boii')
+from dotenv import load_dotenv
+
+load_dotenv()
+
 imports = set()
 datas = []
 
+project = os.getenv("project")
+print(f"project is {project}")
+
 # add all modules to watertap modules hidden imports
-for package in ["pyomo", "scipy", "idaes_flowsheet_processor_ui"]:
+packages = ["pyomo", "scipy", "idaes_flowsheet_processor_ui", project]
+for package in packages:
     pkg = importlib.import_module(package)
     try:
         # base_folder = Path(pkg.__path__[0])
@@ -90,7 +97,9 @@ for package in ["pyomo", "scipy", "idaes_flowsheet_processor_ui"]:
 
 hiddenimports = list(imports)
 # add lorem ipsum.txt for jaraco
-datas.append(('./Lorem ipsum.txt', 'jaraco/text'))
+datas.append(("./Lorem ipsum.txt", "jaraco/text"))
+if project == "watertap":
+    datas.append((src_name, "watertap/core"))
 
 pyomo_imports = [
     "networkx",

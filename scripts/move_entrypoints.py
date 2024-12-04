@@ -5,6 +5,12 @@ import argparse
 
 from pathlib import Path
 
+## the entrypoints need to be stored in a package that will have a 'dist.info' folder in the final python executable
+## currently, one of those is the python package wheel
+## unknown why certain packages make it into the executable and others do not
+
+ENTRYPOINTS_PACKAGE = "wheel"
+
 def update_entry_points(project):
 
     ## temporarily use workarounds while storing flowsheet entrypoints in watertap-ui
@@ -26,20 +32,20 @@ def update_entry_points(project):
             entrypoints_src_path = (
                 f"{conda_prefix}/lib/python*/site-packages/{conda_package_name}-*info/entry_points.txt"
             )
-            entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/setuptools-*info/entry_points.txt"
+            entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
         elif sys.platform == "linux":
             print("linux")
             entrypoints_src_path = (
                 f"{conda_prefix}/lib/python*/site-packages/{conda_package_name}-*info/entry_points.txt"
             )
-            entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/setuptools-*info/entry_points.txt"
+            entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
         else:
             # print("windows")
             entrypoints_src_path = (
                 f"{conda_prefix}/lib/site-packages/{conda_package_name}-*info/entry_points.txt"
             )
             entrypoints_dst_path = (
-                f"{conda_prefix}/lib/site-packages/setuptools-*info/entry_points.txt"
+                f"{conda_prefix}/lib/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
             )
     except Exception as e:
         print(f"unable to get entry points src/dst: {e}")

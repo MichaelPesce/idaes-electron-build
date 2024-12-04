@@ -1,11 +1,10 @@
 import importlib
 from pathlib import Path
 import re
-import os
 
 imports = set()
 datas = []
-
+print(f'inside hook-watertap')
 # add all modules to watertap modules hidden imports
 
 # for package in ["watertap", "pyomo", "scipy", "prommis"]:

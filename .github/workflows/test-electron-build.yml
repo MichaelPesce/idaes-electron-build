@@ -11,7 +11,8 @@ jobs:
             project: [watertap, prommis, idaes]
             include: 
                 - project: watertap
-                  pip-install-target: watertap @ git+https://github.com/watertap-org/watertap@main
+                  pip-install-target: watertap
+                #   pip-install-target: watertap @ git+https://github.com/watertap-org/watertap@main
                 - project: prommis
                   pip-install-target: prommis
                 - project: idaes

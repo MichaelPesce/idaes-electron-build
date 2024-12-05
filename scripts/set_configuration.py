@@ -152,6 +152,9 @@ def setEnvVariables(project = None):
         f.write(f"project={project}")
 
 if __name__ == "__main__":
+    ## TODO: add argument for version number
+    ## - if null, use the function here. otherwise use the argument
+    ## TODO: also add this version nubmer as an environment variable in the react app frontend (for splash page)
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--project", help="Project to create json file for. If not provided, default is WaterTAP.")
     args = parser.parse_args()

@@ -136,7 +136,9 @@ def generatePackageJson(version, project, output_path="../electron/package.json"
     package_json["build"]["win"]["icon"] = icon
     package_json["build"]["linux"]["icon"] = icon
 
-    with open(output_path, "w") as f:
+    working_dir = pathlib.Path(__file__).parent.resolve()
+    package_json_path = os.path.join(working_dir,output_path)
+    with open(package_json_path, "w") as f:
         json.dump(package_json, f)
     return version
 

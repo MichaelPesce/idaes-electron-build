@@ -111,9 +111,8 @@ JSON_FRAMEWORK = {
 def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
-def generatePackageJson(project=None, output_path="electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
-
-    version = getVersionDate()
+def generatePackageJson(version, project, output_path="../electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
+    
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = version
     package_json["author"] = author
@@ -139,17 +138,18 @@ def generatePackageJson(project=None, output_path="electron/package.json", autho
 
     with open(output_path, "w") as f:
         json.dump(package_json, f)
+    return version
 
-def setEnvVariables(project = None):
+def setEnvVariables(version, project):
     working_dir = pathlib.Path(__file__).parent.resolve()
     hook_env_path = os.path.join(working_dir,"../pyinstaller/hooks/.env")
-    react_app_env_path = os.path.join(working_dir,"./electron/idaes-flowsheet-processor-ui/frontend/.env")
+    react_app_env_path = os.path.join(working_dir,"../electron/idaes-flowsheet-processor-ui/frontend/.env")
 
     with open(hook_env_path, "w") as f:
         f.write(f"project={project}")
 
     with open(react_app_env_path, "w") as f:
-        f.write(f"project={project}")
+        f.write(f"REACT_APP_THEME={project}\nREACT_APP_BUILD_VERSION={version}")
 
 if __name__ == "__main__":
     ## TODO: add argument for version number
@@ -157,8 +157,12 @@ if __name__ == "__main__":
     ## TODO: also add this version nubmer as an environment variable in the react app frontend (for splash page)
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--project", help="Project to create json file for. If not provided, default is WaterTAP.")
+    parser.add_argument("-v", "--version", help="Build version, typically in date format (yy.mm.dd). If not provided, will use current date.")
     args = parser.parse_args()
     project = args.project
+    version = args.version
+    if version is None:
+        version = getVersionDate()
     valid_projects = ["watertap", "prommis", "idaes"]
     if project is not None:
         project = project.lower()
@@ -166,5 +170,5 @@ if __name__ == "__main__":
         print(f"project provided: {project} is not a valid project. Must be one of {valid_projects}. Defaulting to watertap")
         project = "watertap"
 
-    generatePackageJson(project)
-    setEnvVariables(project)
+    generatePackageJson(project, version)
+    setEnvVariables(project, version)

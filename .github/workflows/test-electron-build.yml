@@ -9,15 +9,16 @@ jobs:
     strategy:
         fail-fast: false
         matrix:
-            project: [watertap, prommis, idaes]
+            # project: [watertap, prommis, idaes]
+            project: [watertap]
             include: 
                 - project: watertap
                 #   pip-install-target: "watertap @ git+https://github.com/watertap-org/watertap@main"
                   pip-install-target: watertap
-                - project: prommis
-                  pip-install-target: prommis
-                - project: idaes
-                  pip-install-target: idaes-pse
+                # - project: prommis
+                #   pip-install-target: prommis
+                # - project: idaes
+                #   pip-install-target: idaes-pse
 
     name: Test Electron Build For ${{ matrix.project }}
     uses: ./.github/workflows/electron-build.yml

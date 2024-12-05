@@ -76,6 +76,11 @@ jobs:
       - name: Set configuration files
         run: python scripts/set_configuration.py -p ${{ inputs.project }} -v ${{ steps.generate-build-number.outputs.build-number }}
 
+      - name: Install idaes-flowsheet-processor-ui Python package
+        working-directory: ./electron/idaes-flowsheet-processor-ui
+        run: |
+          pip install --progress-bar off .
+
       - name: Show files in idaes-flowsheet-processor-ui directory
         working-directory: ./electron/idaes-flowsheet-processor-ui/backend
         run: ls -a

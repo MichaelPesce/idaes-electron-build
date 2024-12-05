@@ -6,3 +6,5 @@ py_dist/
 __pycache__
 idaes-flowsheet-processor-ui/
 node_modules/
+package.json
+package-lock.json

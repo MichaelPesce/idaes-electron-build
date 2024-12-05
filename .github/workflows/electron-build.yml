@@ -81,6 +81,13 @@ jobs:
         run: |
           pip install --progress-bar off .
 
+      - name: Show files
+        run: ls -a
+      
+      - name: Show files in electron directory
+        working-directory: ./electron
+        run: ls -a
+
       - name: Install Electron JS dependencies
         run: |
           npm --prefix electron clean-install

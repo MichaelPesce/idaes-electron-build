@@ -103,6 +103,7 @@ jobs:
         run: idaes get-extensions
 
       - name: Transfer Entry points
+        working-directory: ./scripts
         run: |
           python move_entrypoints.py -p ${{ inputs.project }}
 

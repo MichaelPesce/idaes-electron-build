@@ -15,10 +15,10 @@ def update_entry_points(project):
 
     ## temporarily use workarounds
     if project == "prommis":
-        conda_package_name = "watertap_ui"
+        conda_package_name = "prommis"
         entry_points_project_name = "prommis"
     elif project == "idaes":
-        conda_package_name = "watertap_ui"
+        conda_package_name = "idaes_pse"
         entry_points_project_name = "idaes"
     else:
         conda_package_name = project

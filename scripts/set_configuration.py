@@ -121,9 +121,9 @@ def generatePackageJson(version, project, output_path="../electron/package.json"
     package_json["build"]["win"]["target"] = "nsis"
 
     ## add artifact names with version
-    package_json["build"]["nsis"]["artifactName"] = f"IDAES-Flowsheet-Processor_{version}_win64.exe"
-    package_json["build"]["win"]["artifactName"] = f"IDAES-Flowsheet-Processor_{version}_win64.exe"
-    package_json["build"]["deb"]["artifactName"] = f"IDAES-Flowsheet-Processor_{version}_amd64.deb"
+    package_json["build"]["nsis"]["artifactName"] = f"{project}-Flowsheet-Processor_{version}_win64.exe"
+    package_json["build"]["win"]["artifactName"] = f"{project}-Flowsheet-Processor_{version}_win64.exe"
+    package_json["build"]["deb"]["artifactName"] = f"{project}-Flowsheet-Processor_{version}_amd64.deb"
 
     ## add icons
     if project == "watertap":

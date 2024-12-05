@@ -90,7 +90,7 @@ jobs:
 
       - name: Install Electron JS dependencies
         run: |
-          npm --prefix electron clean-install
+          npm --prefix electron install
 
       - name: Install frontend JS dependencies
         run: |

@@ -107,6 +107,9 @@ jobs:
         run: |
           python move_entrypoints.py -p ${{ inputs.project }}
 
+      - name: Print Python pip packages
+        run: pip freeze
+
       - name: Build Backend
         working-directory: ./pyinstaller
         run: pyinstaller -y --clean --distpath ../electron/py_dist main.spec

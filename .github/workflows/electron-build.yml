@@ -1,9 +1,33 @@
 name: App build
-
+run-name: App Build For ${{ inputs.project }}
 on:
-  push:
-    branches:
-      - "build"
+  workflow_call:
+    inputs:
+      project:
+        type: string
+        required: true
+      pip-install-target:
+        type: string
+        required: true
+      idaes-flowsheet-processor-ui-repo:
+        type: string
+        default: watertap-org/idaes-flowsheet-processor-ui
+      idaes-flowsheet-processor-ui-ref:
+        type: string
+        default: main
+      package-build-number:
+        type: string
+    secrets:
+      AZURE_KEY_VAULT_URI:
+        required: true
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_CLIENT_SECRET:
+        required: true
+      AZURE_CERT_NAME:
+        required: true
 
 defaults:
   run:
@@ -32,19 +56,25 @@ jobs:
           dotnet tool install --global AzureSignTool
 
         ## use this for naming package
-      - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%y.%m.%d')"
+      - name: Generate Package Build Number
+        id: generate-build-number
+        run: |
+          if [ -z "${{ inputs.package-build-number }}"]; then
+            echo "inside if statement"
+            echo "::set-output name=build-number::$(date +'%y.%m.%d')"
+          else
+            echo "inside else statement"
+            echo "::set-output name=build-number::${{ inputs.package-build-number }}"
+          fi
 
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
         # run: git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
-        run: git clone https://github.com/MichaelPesce/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout initial-cleanup && pip install --progress-bar off .
+        run: git clone https://github.com/${{ inputs.idaes-flowsheet-processor-ui-repo }} && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout ${{ inputs.idaes-flowsheet-processor-ui-ref }} && pip install --progress-bar off .
 
-        ## TODO: make this project agnostic
         ## creates package.json and .env files
       - name: Set configuration files
-        run: python scripts/set_configuration.py -p watertap
+        run: python scripts/set_configuration.py -p ${{ inputs.project }}
 
       - name: Install idaes-flowsheet-processor-ui Python package
         working-directory: ./electron/idaes-flowsheet-processor-ui
@@ -59,19 +89,15 @@ jobs:
         run: |
           npm --prefix electron/idaes-flowsheet-processor-ui/frontend clean-install
 
-        ## TODO: make this install the proper project package
-        ## might not need to be installed locally anymore
-      - name: Install Watertap locally 
-        working-directory: ../
-        run: git clone https://github.com/watertap-org/watertap.git && cd watertap && pip install --progress-bar off .
+      - name: Pip install backend repository
+        run: pip install --progress-bar off ${{ inputs.pip-install-target }}
 
       - name: Get idaes extensions
         run: idaes get-extensions
 
-        ## TODO: make this project agnostic
       - name: Transfer Entry points
         run: |
-          python move_entrypoints.py -p watertap
+          python move_entrypoints.py -p ${{ inputs.project }}
 
       - name: Build Backend
         working-directory: ./pyinstaller
@@ -85,7 +111,7 @@ jobs:
 
       - name: Sign Windows Distribution
         run: |
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/IDAES-Flowsheet-Processor_${{ steps.date.outputs.date }}_win64.exe
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/IDAES-Flowsheet-Processor_${{ steps.generate-build-number.outputs.build-number }}_win64.exe
 
 
       - name: Upload artifact for windows build
@@ -94,4 +120,4 @@ jobs:
         with:
             name: windows-dist
             path: |
-              electron/dist/IDAES-Flowsheet-Processor_${{ steps.date.outputs.date }}_win64.exe
+              electron/dist/${{ inputs.project }}-Flowsheet-Processor_${{ steps.generate-build-number.outputs.build-number }}_win64.exe

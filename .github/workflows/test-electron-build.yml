@@ -1,0 +1,27 @@
+name: Test Electron Build
+
+on:
+  push:
+    branches: [build]
+
+jobs:
+  test-electron-build:
+    strategy:
+        matrix:
+            project: [watertap, prommis, idaes]
+            include: 
+                - project: watertap
+                  pip-install-target: watertap @ git+https://github.com/watertap-org/watertap@main
+                - project: prommis
+                  pip-install-target: prommis
+                - project: idaes
+                  pip-install-target: idaes-pse
+
+    name: Test Electron Build For ${{ matrix.project }}
+    uses: ./.github/workflows/electron-build.yml
+    with:
+        project: ${{ matrix.project }}
+        pip-install-target: ${{ matrix.pip-install-target }}
+        idaes-flowsheet-processor-ui-repo: MichaelPesce/idaes-flowsheet-processor-ui
+        idaes-flowsheet-processor-ui-ref: initial-cleanup
+    secrets: inherit

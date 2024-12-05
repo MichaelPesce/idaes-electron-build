@@ -7,6 +7,7 @@ on:
 jobs:
   test-electron-build:
     strategy:
+        fail-fast: false
         matrix:
             project: [watertap, prommis, idaes]
             include: 

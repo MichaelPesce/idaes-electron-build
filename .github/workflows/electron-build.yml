@@ -105,6 +105,9 @@ jobs:
       - name: Print Python pip packages
         run: pip freeze
 
+      - name: Print conda packages
+        run: conda list
+
       - name: Build Backend
         working-directory: ./pyinstaller
         run: pyinstaller -y --clean --distpath ../electron/py_dist main.spec

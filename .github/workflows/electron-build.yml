@@ -100,7 +100,7 @@ jobs:
       - name: Transfer Entry points
         working-directory: ./scripts
         run: |
-          python move_entrypoints.py -p ${{ inputs.project }}
+          python move_entrypoints.py -p ${{ inputs.project }} -v ${{ steps.generate-build-number.outputs.build-number }}
 
       - name: Print Python pip packages
         run: pip freeze

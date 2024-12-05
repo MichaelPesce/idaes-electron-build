@@ -89,12 +89,12 @@ jobs:
         run: ls -a
 
       - name: Install Electron JS dependencies
-        run: |
-          npm --prefix electron install
+        working-directory: ./electron
+        run:  npm install
 
       - name: Install frontend JS dependencies
-        run: |
-          npm --prefix electron/idaes-flowsheet-processor-ui/frontend clean-install
+        working-directory: ./electron/idaes-flowsheet-processor-ui/frontend 
+        run: npm clean-install
 
       - name: Pip install backend repository
         run: pip install --progress-bar off ${{ inputs.pip-install-target }}
@@ -111,10 +111,12 @@ jobs:
         run: pyinstaller -y --clean --distpath ../electron/py_dist main.spec
 
       - name: Build Frontend
-        run: npm --prefix electron/idaes-flowsheet-processor-ui/frontend run build
+        working-directory: ./electron/idaes-flowsheet-processor-ui/frontend 
+        run: npm run build
 
       - name: Build Windows Distribution
-        run: npm --prefix electron run electron-build-win
+        working-directory: ./electron
+        run: npm run electron-build-win
 
       - name: Sign Windows Distribution
         run: |

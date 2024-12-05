@@ -2,7 +2,7 @@ name: Test Electron Build
 
 on:
   push:
-    branches: [build]
+    branches: [initial-cleanup]
 
 jobs:
   test-electron-build:

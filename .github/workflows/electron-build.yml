@@ -70,7 +70,7 @@ jobs:
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
         # run: git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
-        run: git clone https://github.com/${{ inputs.idaes-flowsheet-processor-ui-repo }} && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout ${{ inputs.idaes-flowsheet-processor-ui-ref }} && pip install --progress-bar off .
+        run: git clone https://github.com/${{ inputs.idaes-flowsheet-processor-ui-repo }}.git && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout ${{ inputs.idaes-flowsheet-processor-ui-ref }} && pip install --progress-bar off .
 
         ## creates package.json and .env files
       - name: Set configuration files

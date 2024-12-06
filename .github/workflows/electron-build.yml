@@ -121,6 +121,6 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-            name: windows-dist
+            name: ${{ inputs.project }}-windows-dist
             path: |
               electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_win64.exe

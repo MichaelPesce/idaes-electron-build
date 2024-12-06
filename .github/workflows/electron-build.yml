@@ -82,6 +82,10 @@ jobs:
             echo "build-number=${{ inputs.package-build-number }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Set output
+        id: artifact-path
+        run: echo "path=electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ matrix.os }}.${{ matrix.artifact-file-extension }}" >> $GITHUB_OUTPUT
+
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
         # run: git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
@@ -126,7 +130,7 @@ jobs:
 
       - name: Sign Windows Distribution
         run: |
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ matrix.os }}.${{ matrix.artifact-file-extension }}
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v ${{ steps.artifact-path.outputs.path }}
 
 
       - name: Upload artifact for windows build
@@ -134,5 +138,4 @@ jobs:
         if: always()
         with:
             name: ${{ inputs.project }}-windows-dist
-            path: |
-              electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ matrix.os }}.${{ matrix.artifact-file-extension }}
+            path: ${{ steps.artifact-path.outputs.path }}

@@ -123,6 +123,7 @@ def generatePackageJson(project, version, artifact_name, output_path="../electro
     ## add artifact names with version
     package_json["build"]["nsis"]["artifactName"] = f"{artifact_name}_{version}_win64.exe"
     package_json["build"]["win"]["artifactName"] = f"{artifact_name}_{version}_win64.exe"
+    package_json["build"]["mac"]["artifactName"] = f"{artifact_name}_{version}_arm64.dmg"
     package_json["build"]["deb"]["artifactName"] = f"{artifact_name}_{version}_amd64.deb"
 
     ## add icons

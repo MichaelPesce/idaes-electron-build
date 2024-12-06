@@ -3,6 +3,15 @@ run-name: App Build For ${{ inputs.project }}
 on:
   workflow_call:
     inputs:
+      os:
+        type: string
+        default: win64
+      os-version:
+        type: string
+        default: windows-latest
+      artifact-file-extension:
+        type: string
+        default: exe
       project:
         type: string
         required: true
@@ -42,23 +51,9 @@ env:
 
 jobs:
   electron-build:
-    name: ${{ matrix.os-version }} build
+    name: ${{ inputs.os }} build
 
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - arm64
-          - win64
-        include:
-          - os: arm64
-            os-version: macos-latest
-            artifact-file-extension: dmg
-          - os: win64
-            os-version: windows-latest
-            artifact-file-extension: exe
-
-    runs-on: ${{ matrix.os-version }}
+    runs-on: ${{ inputs.os-version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -84,7 +79,7 @@ jobs:
 
       - name: Set artifact path
         id: artifact-path
-        run: echo "path=electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ matrix.os }}.${{ matrix.artifact-file-extension }}" >> $GITHUB_OUTPUT
+        run: echo "path=electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ inputs.os }}.${{ inputs.artifact-file-extension }}" >> $GITHUB_OUTPUT
 
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
@@ -124,10 +119,10 @@ jobs:
           CI: false
         run: npm run build
 
-      - name: Build ${{ matrix.os }} Distribution
+      - name: Build ${{ inputs.os.os }} Distribution
         working-directory: ./electron
         run: |
-          if [ "${{ matrix.os }}" = "arm64"]; then
+          if [ "${{ inputs.os.os }}" = "arm64"]; then
             npm run electron-build-mac
           else
             npm run electron-build-win
@@ -143,5 +138,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-            name: ${{ inputs.project }}-${{ matrix.os }}x-dist
+            name: ${{ inputs.project }}-${{ inputs.os.os }}x-dist
             path: ${{ steps.artifact-path.outputs.path }}

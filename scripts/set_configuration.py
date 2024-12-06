@@ -153,9 +153,6 @@ def setEnvVariables(project, version):
         f.write(f"REACT_APP_THEME={project}\nREACT_APP_BUILD_VERSION={version}")
 
 if __name__ == "__main__":
-    ## TODO: add argument for version number
-    ## - if null, use the function here. otherwise use the argument
-    ## TODO: also add this version nubmer as an environment variable in the react app frontend (for splash page)
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--project", help="Project to create json file for. If not provided, default is WaterTAP.")
     parser.add_argument("-v", "--version", help="Build version, typically in date format (yy.mm.dd). If not provided, will use current date.")

@@ -111,7 +111,7 @@ JSON_FRAMEWORK = {
 def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
-def generatePackageJson(project, version, output_path="../electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
+def generatePackageJson(project, version, artifact_name, output_path="../electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
     
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = version
@@ -121,9 +121,9 @@ def generatePackageJson(project, version, output_path="../electron/package.json"
     package_json["build"]["win"]["target"] = "nsis"
 
     ## add artifact names with version
-    package_json["build"]["nsis"]["artifactName"] = f"{project}-Flowsheet-Processor_{version}_win64.exe"
-    package_json["build"]["win"]["artifactName"] = f"{project}-Flowsheet-Processor_{version}_win64.exe"
-    package_json["build"]["deb"]["artifactName"] = f"{project}-Flowsheet-Processor_{version}_amd64.deb"
+    package_json["build"]["nsis"]["artifactName"] = f"{artifact_name}_{version}_win64.exe"
+    package_json["build"]["win"]["artifactName"] = f"{artifact_name}_{version}_win64.exe"
+    package_json["build"]["deb"]["artifactName"] = f"{artifact_name}_{version}_amd64.deb"
 
     ## add icons
     if project == "watertap":
@@ -158,11 +158,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--project", help="Project to create json file for. If not provided, default is WaterTAP.")
     parser.add_argument("-v", "--version", help="Build version, typically in date format (yy.mm.dd). If not provided, will use current date.")
+    parser.add_argument("-a", "--artifact_name", help="Artifact name. If not provided, will use provided project to create artifact name.")
     args = parser.parse_args()
     project = args.project
     version = args.version
+    artifact_name = args.artifact_name
     if version is None:
         version = getVersionDate()
+    if artifact_name is None:
+        artifact_name = f"{project}-Flowsheet-Processor"
     valid_projects = ["watertap", "prommis", "idaes"]
     if project is not None:
         project = project.lower()
@@ -170,5 +174,5 @@ if __name__ == "__main__":
         print(f"project provided: {project} is not a valid project. Must be one of {valid_projects}. Defaulting to watertap")
         project = "watertap"
 
-    generatePackageJson(project=project, version=version)
+    generatePackageJson(project=project, version=version, artifact_name=artifact_name)
     setEnvVariables(project=project, version=version)

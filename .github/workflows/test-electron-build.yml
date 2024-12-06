@@ -28,7 +28,7 @@ jobs:
                   os-version: windows-latest
                   artifact-file-extension: exe
 
-    name: Test Electron Build For ${{ matrix.project }}
+    name: Test ${{ matrix.os }} Electron Build For ${{ matrix.project }}
     uses: ./.github/workflows/electron-build.yml
     with:
         project: ${{ matrix.project }}

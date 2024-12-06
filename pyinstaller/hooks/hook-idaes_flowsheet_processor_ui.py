@@ -12,7 +12,7 @@ datas = []
 project = os.getenv("project")
 print(f"project is {project}")
 
-packages = ["pyomo", "scipy", "idaes_flowsheet_processor_ui", project]
+packages = ["pyomo", "scipy", project]
 for package in packages:
     pkg = importlib.import_module(package)
     try:

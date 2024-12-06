@@ -5,7 +5,6 @@ import pathlib
 import os
 
 JSON_FRAMEWORK = {
-  "name": "idaes-flowsheet-processor-ui",
   "private": True,
   "main": "main.js",
   "dependencies": {
@@ -60,10 +59,8 @@ JSON_FRAMEWORK = {
   },
   "homepage": ".",
   "build": {
-    "appId": "com.electron.idaes-flowsheet-processor-ui",
     "extends": None,
     "asar": False,
-    "productName": "IDAES-Flowsheet-Processor",
     "afterSign": "notarize.js",
     "nsis": {
       "oneClick": False,
@@ -116,7 +113,25 @@ def generatePackageJson(project, version, artifact_name, output_path="../electro
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = version
     package_json["author"] = author
+    if project == "idaes":
+        package_json["name"] = "idaes-flowsheet-processor-ui"
+        package_json["build"]["productName"] = "IDAES-Flowsheet-Processor"
+        package_json["build"]["appId"] = "com.electron.idaes-flowsheet-processor-ui"
+        icon = "build/idaes-logo.ico"
+    elif project == "watertap":
+        package_json["name"] = "watertap-flowsheet-processor-ui"
+        package_json["build"]["productName"] = "WaterTAP-Flowsheet-Processor"
+        package_json["build"]["appId"] = "com.electron.watertap-flowsheet-processor-ui"
+        icon = "build/nawi-logo.ico"
+    elif project == "prommis":
+        package_json["name"] = "prommis-flowsheet-processor-ui"
+        package_json["build"]["productName"] = "PROMMIS-Flowsheet-Processor"
+        package_json["build"]["appId"] = "com.electron.prommis-flowsheet-processor-ui"
+        icon = "build/prommis-logo.ico"
 
+    package_json["build"]["mac"]["icon"] = icon
+    package_json["build"]["win"]["icon"] = icon
+    package_json["build"]["linux"]["icon"] = icon
 
     package_json["build"]["win"]["target"] = "nsis"
 
@@ -125,19 +140,6 @@ def generatePackageJson(project, version, artifact_name, output_path="../electro
     package_json["build"]["win"]["artifactName"] = f"{artifact_name}_{version}_win64.exe"
     package_json["build"]["mac"]["artifactName"] = f"{artifact_name}_{version}_arm64.dmg"
     package_json["build"]["deb"]["artifactName"] = f"{artifact_name}_{version}_amd64.deb"
-
-    ## add icons
-    if project == "watertap":
-        icon = "build/nawi-logo.ico"
-    elif project == "prommis":
-        icon = "build/prommis-logo.ico"
-    elif project == "idaes":
-        icon = "build/idaes-logo.ico"
-    
-
-    package_json["build"]["mac"]["icon"] = icon
-    package_json["build"]["win"]["icon"] = icon
-    package_json["build"]["linux"]["icon"] = icon
 
     working_dir = pathlib.Path(__file__).parent.resolve()
     package_json_path = os.path.join(working_dir,output_path)

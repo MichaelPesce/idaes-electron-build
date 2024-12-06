@@ -76,19 +76,6 @@ jobs:
       - name: Set configuration files
         run: python scripts/set_configuration.py -p ${{ inputs.project }} -v ${{ steps.generate-build-number.outputs.build-number }}
 
-      - name: Install idaes-flowsheet-processor-ui Python package
-        working-directory: ./electron/idaes-flowsheet-processor-ui
-        run: |
-          pip install --progress-bar off .
-
-      - name: Show files in idaes-flowsheet-processor-ui directory
-        working-directory: ./electron/idaes-flowsheet-processor-ui/backend
-        run: ls -a
-      
-      - name: Show files in idaes-flowsheet-processor-ui directory
-        working-directory: ./electron/idaes-flowsheet-processor-ui/backend/src
-        run: ls -a
-
       - name: Install Electron JS dependencies
         working-directory: ./electron
         run:  npm install
@@ -108,18 +95,14 @@ jobs:
         run: |
           python move_entrypoints.py -p ${{ inputs.project }}
 
-      - name: Print Python pip packages
-        run: pip freeze
-
-      - name: Print conda packages
-        run: conda list
-
       - name: Build Backend
         working-directory: ./pyinstaller
         run: pyinstaller -y --clean --distpath ../electron/py_dist main.spec
 
       - name: Build Frontend
-        working-directory: ./electron/idaes-flowsheet-processor-ui/frontend 
+        working-directory: ./electron/idaes-flowsheet-processor-ui/frontend
+        env:
+          CI: false
         run: npm run build
 
       - name: Build Windows Distribution

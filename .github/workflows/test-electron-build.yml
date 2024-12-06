@@ -9,8 +9,7 @@ jobs:
     strategy:
         fail-fast: false
         matrix:
-            # project: [watertap, prommis, idaes]
-            project: [watertap]
+            project: [watertap, prommis, idaes]
             include: 
                 - project: watertap
                   pip-install-target: "watertap@git+https://github.com/watertap-org/watertap@main"

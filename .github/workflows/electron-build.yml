@@ -119,10 +119,10 @@ jobs:
           CI: false
         run: npm run build
 
-      - name: Build ${{ inputs.os.os }} Distribution
+      - name: Build ${{ inputs.os }} Distribution
         working-directory: ./electron
         run: |
-          if [ "${{ inputs.os.os }}" = "arm64"]; then
+          if [ "${{ inputs.os }}" = "arm64" ]; then
             npm run electron-build-mac
           else
             npm run electron-build-win
@@ -138,5 +138,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-            name: ${{ inputs.project }}-${{ inputs.os.os }}-dist
+            name: ${{ inputs.project }}-${{ inputs.os }}-dist
             path: ${{ steps.artifact-path.outputs.path }}

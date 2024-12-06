@@ -41,10 +41,24 @@ env:
   PYTEST_ADDOPTS: --color=yes
 
 jobs:
-  windows-build:
-    name: Windows Build
+  electron-build:
+    name: ${{ matrix.os-version }} build
 
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - arm64
+          - win64
+        include:
+          - os: arm64
+            os-version: macos-latest
+            artifact-file-extension: dmg
+          - os: win64
+            os-version: windows-latest
+            artifact-file-extension: exe
+
+    runs-on: ${{ matrix.os-version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -114,7 +128,7 @@ jobs:
 
       - name: Sign Windows Distribution
         run: |
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_win64.exe
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ matrix.os }}.${{ matrix.artifact-file-extension }}
 
 
       - name: Upload artifact for windows build
@@ -123,4 +137,4 @@ jobs:
         with:
             name: ${{ inputs.project }}-windows-dist
             path: |
-              electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_win64.exe
+              electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ matrix.os }}.${{ matrix.artifact-file-extension }}

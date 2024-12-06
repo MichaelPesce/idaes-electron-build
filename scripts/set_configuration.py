@@ -111,7 +111,7 @@ JSON_FRAMEWORK = {
 def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
-def generatePackageJson(version, project, output_path="../electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
+def generatePackageJson(project, version, output_path="../electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
     
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = version
@@ -141,7 +141,7 @@ def generatePackageJson(version, project, output_path="../electron/package.json"
     with open(package_json_path, "w") as f:
         json.dump(package_json, f)
 
-def setEnvVariables(version, project):
+def setEnvVariables(project, version):
     working_dir = pathlib.Path(__file__).parent.resolve()
     hook_env_path = os.path.join(working_dir,"../pyinstaller/hooks/.env")
     react_app_env_path = os.path.join(working_dir,"../electron/idaes-flowsheet-processor-ui/frontend/.env")
@@ -171,5 +171,5 @@ if __name__ == "__main__":
         print(f"project provided: {project} is not a valid project. Must be one of {valid_projects}. Defaulting to watertap")
         project = "watertap"
 
-    generatePackageJson(project, version)
-    setEnvVariables(project, version)
+    generatePackageJson(project=project, version=version)
+    setEnvVariables(project=project, version=version)

@@ -77,11 +77,9 @@ jobs:
         id: generate-build-number
         run: |
           if [ -z "${{ inputs.package-build-number }}"]; then
-            echo "inside if statement"
-            echo "::set-output name=build-number::$(date +'%y.%m.%d')"
+            echo "build-number=$(date +'%y.%m.%d')" >> $GITHUB_OUTPUT
           else
-            echo "inside else statement"
-            echo "::set-output name=build-number::${{ inputs.package-build-number }}"
+            echo "build-number=${{ inputs.package-build-number }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Install IDAES Flowsheet Processor UI locally

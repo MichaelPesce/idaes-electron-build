@@ -128,8 +128,10 @@ def generatePackageJson(project, version, output_path="../electron/package.json"
     ## add icons
     if project == "watertap":
         icon = "build/nawi-logo.ico"
-    else: ## TODO: create logos for each project
-        icon = "build/nawi-logo.ico"
+    elif project == "prommis":
+        icon = "build/prommis-logo.ico"
+    elif project == "idaes":
+        icon = "build/idaes-logo.ico"
     
 
     package_json["build"]["mac"]["icon"] = icon

@@ -9,6 +9,9 @@ on:
       pip-install-target:
         type: string
         required: true
+      artifact-name:
+          type: string
+          default: ${{ inputs.project }}-Flowsheet-Processor
       idaes-flowsheet-processor-ui-repo:
         type: string
         default: watertap-org/idaes-flowsheet-processor-ui
@@ -111,7 +114,7 @@ jobs:
 
       - name: Sign Windows Distribution
         run: |
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/${{ inputs.project }}-Flowsheet-Processor_${{ steps.generate-build-number.outputs.build-number }}_win64.exe
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v electron/dist/${{ inputs.artifact-name }}-Flowsheet-Processor_${{ steps.generate-build-number.outputs.build-number }}_win64.exe
 
 
       - name: Upload artifact for windows build
@@ -120,4 +123,4 @@ jobs:
         with:
             name: windows-dist
             path: |
-              electron/dist/${{ inputs.project }}-Flowsheet-Processor_${{ steps.generate-build-number.outputs.build-number }}_win64.exe
+              electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_win64.exe

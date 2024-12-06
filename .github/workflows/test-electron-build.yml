@@ -13,18 +13,21 @@ jobs:
             project: [watertap]
             include: 
                 - project: watertap
-                #   pip-install-target: "watertap@ git+https://github.com/watertap-org/watertap@main"
-                  pip-install-target: watertap
-                # - project: prommis
-                #   pip-install-target: prommis
-                # - project: idaes
-                #   pip-install-target: idaes-pse
+                  pip-install-target: "watertap@ git+https://github.com/watertap-org/watertap@main"
+                  artifact-name: WaterTAP-Flowsheet-Processor
+                - project: prommis
+                  pip-install-target: prommis
+                  artifact-name: PROMMIS-Flowsheet-Processor
+                - project: idaes
+                  pip-install-target: idaes-pse
+                  artifact-name: IDAES-Flowsheet-Processor
 
     name: Test Electron Build For ${{ matrix.project }}
     uses: ./.github/workflows/electron-build.yml
     with:
         project: ${{ matrix.project }}
         pip-install-target: ${{ matrix.pip-install-target }}
+        artifact-name: ${{ matrix.artifact-name }}
         idaes-flowsheet-processor-ui-repo: MichaelPesce/idaes-flowsheet-processor-ui
         idaes-flowsheet-processor-ui-ref: initial-cleanup
     secrets: inherit

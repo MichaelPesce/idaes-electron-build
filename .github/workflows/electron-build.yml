@@ -138,5 +138,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-            name: ${{ inputs.project }}-${{ inputs.os.os }}x-dist
+            name: ${{ inputs.project }}-${{ inputs.os.os }}-dist
             path: ${{ steps.artifact-path.outputs.path }}

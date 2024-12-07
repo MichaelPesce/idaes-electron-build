@@ -16,7 +16,7 @@ jobs:
                   pip-install-target: "watertap@git+https://github.com/watertap-org/watertap@main"
                   artifact-name: WaterTAP-Flowsheet-Processor
                 - project: prommis
-                  pip-install-target: prommis
+                  pip-install-target: "prommis@git+https://github.com/MichaelPesce/prommis@main"
                   artifact-name: PROMMIS-Flowsheet-Processor
                 - project: idaes
                   pip-install-target: idaes-pse

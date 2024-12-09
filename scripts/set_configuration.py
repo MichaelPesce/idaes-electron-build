@@ -37,7 +37,6 @@ JSON_FRAMEWORK = {
     "remove-previous-backend-build-win": "rd /S /Q py_dist",
     "remove-previous-dist": "rm -r dist/*",
     "remove-previous-dist-win": "rd /S /Q dist",
-    "get-extensions-installer": "cd ../pyinstaller && pyinstaller -y --clean --distpath ../electron/setup-extensions-dist setup-extensions.spec"
   },
   "eslintConfig": {
     "extends": [
@@ -79,7 +78,6 @@ JSON_FRAMEWORK = {
       "build/**/*",
       "py_dist/**/*",
       "package.json",
-      "setup-extensions-dist/**/*",
       "main.js"
     ],
     "directories": {

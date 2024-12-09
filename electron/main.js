@@ -1,4 +1,4 @@
-const { app, BrowserWindow, protocol } = require('electron')
+const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const log = require('electron-log');
 const Store = require("electron-store")
@@ -9,11 +9,8 @@ const axios = require('axios').default;
 const isDev = require('electron-is-dev')
 const { spawn } = require("child_process")
 
-// Python server parameters
 const PY_PORT = 8001;
 const UI_PORT = 3000;
-let uiReady = false
-
 const serverURL = `http://localhost:${PY_PORT}`
 const uiURL = `http://localhost:${UI_PORT}`
 
@@ -24,7 +21,6 @@ if(isDev) {
 }
 
 log.transports.file.level = "info";
-// log.transports.console.format = '{h}:{i}:{s} {text}'
 log.transports.console.format = '{text}'
 log.transports.file.format = '{text}'
 
@@ -74,8 +70,6 @@ function createWindow() {
   
   // save size of window when resized
   win.on("resized", () => saveBounds(win.getSize()));
-  // win.on("moved", () => saveBounds(win.getSize()));
-
  
   win.loadURL(
     isDev
@@ -90,7 +84,7 @@ const installExtensions = () => {
     installationProcess = spawn(
       path.join(__dirname, "./py_dist/main/main"),
       [
-        "install"
+        "-i"
       ]
     );
 
@@ -132,14 +126,13 @@ const startServer = () => {
             cwd: '../backend/app'
         }
       );
-      // log.info("Python process started in dev mode");
-      // console.log("Python process started in dev mode");
+      
     } else {
       try {
       backendProcess = spawn(
         path.join(__dirname, "./py_dist/main/main"),
         [
-          ""
+          "-p"
         ]
       );
       var scriptOutput = "";
@@ -169,22 +162,18 @@ const startServer = () => {
     }
     return backendProcess;
 }
-    
 
 
 app.whenReady().then(() => {
     // Entry point
     if (isDev) {
-      // log.info('starting electron app in dev mode')
-      // console.log('starting electron app in dev mode')
+      
       createWindow()
     } else {
       let win = createWindow();
       let serverProcess
       let installationProcess = installExtensions()
       installationProcess.on('exit', code => {
-        // log.info('installation exit code is', code)
-        // console.log('installation exit code is', code)
         log.info('starting server')
         console.log('starting server')
         serverProcess = startServer()
@@ -195,9 +184,6 @@ app.whenReady().then(() => {
         var startUp = (url, appName, spawnedProcess, successFn=null, maxTrials=15) => {
             axios.get(url).then(() => {
                 console.log(`${appName} is ready at ${url}!`)
-                // if (successFn) {
-                //     successFn()
-                // }
             })
             .catch(async () => {
                 console.log(`Waiting to be able to connect ${appName} at ${url}...`)

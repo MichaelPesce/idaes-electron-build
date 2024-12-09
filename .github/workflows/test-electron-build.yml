@@ -13,10 +13,10 @@ jobs:
             os: [arm64, win64]
             include: 
                 - project: watertap
-                  pip-install-target: "watertap@git+https://github.com/watertap-org/watertap@main"
+                  pip-install-target: watertap@git+https://github.com/watertap-org/watertap@main
                   artifact-name: WaterTAP-Flowsheet-Processor
                 - project: prommis
-                  pip-install-target: "prommis@git+https://github.com/MichaelPesce/prommis@update-entrypoint"
+                  pip-install-target: prommis@git+https://github.com/MichaelPesce/prommis@update-entrypoint
                   artifact-name: PROMMIS-Flowsheet-Processor
                 - project: idaes
                   pip-install-target: idaes-pse

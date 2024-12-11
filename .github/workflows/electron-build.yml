@@ -140,6 +140,10 @@ jobs:
         working-directory: ./electron/idaes-flowsheet-processor-ui/frontend 
         run: npm clean-install
 
+        ## if IDAES-PSE is already installed, flowsheet export on Dan's branch is not found unless I uninstall first
+      - name: Pip uninstall idaes_pse
+        run: pip install -y idaes_pse
+
       - name: Pip install ${{ inputs.pip-install-target }}
         run: pip install --progress-bar off ${{ inputs.pip-install-target }}
 
@@ -180,7 +184,7 @@ jobs:
         run: |
           AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v ${{ steps.artifact-path.outputs.path }}
 
-      - name: Upload artifact for ${{ runner.os }} build
+      - name: Upload artifact for ${{ inputs.os }} build
         uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -19,7 +19,7 @@ jobs:
                   pip-install-target: prommis@git+https://github.com/MichaelPesce/prommis@update-entrypoint
                   artifact-name: PROMMIS-Flowsheet-Processor
                 - project: idaes
-                  pip-install-target: idaes-pse
+                  pip-install-target: idaes-pse@git+https://github.com/dangunter/idaes-pse@west_coast_wrapper
                   artifact-name: IDAES-Flowsheet-Processor
                 - os: arm64
                   os-version: macos-latest

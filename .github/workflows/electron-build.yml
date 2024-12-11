@@ -140,9 +140,9 @@ jobs:
         working-directory: ./electron/idaes-flowsheet-processor-ui/frontend 
         run: npm clean-install
 
-        ## if IDAES-PSE is already installed, flowsheet export on Dan's branch is not found unless I uninstall first
-      - name: Pip uninstall idaes_pse
-        run: pip uninstall -y idaes_pse
+      #   ## if IDAES-PSE is already installed, flowsheet export on Dan's branch is not found unless I uninstall first
+      # - name: Pip uninstall idaes_pse
+      #   run: pip uninstall -y idaes_pse
 
       - name: Pip install ${{ inputs.pip-install-target }}
         run: pip install --progress-bar off ${{ inputs.pip-install-target }}

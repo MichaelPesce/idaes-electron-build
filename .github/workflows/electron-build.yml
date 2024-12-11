@@ -125,8 +125,8 @@ jobs:
         run: git clone https://github.com/${{ inputs.idaes-flowsheet-processor-ui-repo }}.git && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout ${{ inputs.idaes-flowsheet-processor-ui-ref }} && pip install --progress-bar off .
 
       - name: Install full set of dependencies
-        working-directory: ./electron/idaes-flowsheet-processor-ui/backend/requirements.txt
-        run: pip install --progress-bar off .
+        working-directory: ./electron/idaes-flowsheet-processor-ui/backend
+        run: pip install -r requirements.txt
 
         ## creates package.json and .env files
       - name: Set configuration files

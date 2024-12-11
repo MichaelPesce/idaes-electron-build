@@ -74,12 +74,13 @@ jobs:
           activate-environment: flowsheet-processor-env
           miniforge-version: latest
       
+        ## install Azure signtool for windows builds
       - name: Install Azure Signtool
         if: runner.os == 'Windows'
         run: |
           dotnet tool install --global AzureSignTool
       
-    
+        ## handle Apple certificate, keychain setup for mac builds
       - name: Install the Apple certificate
         if: runner.os == 'macOS'
         env:

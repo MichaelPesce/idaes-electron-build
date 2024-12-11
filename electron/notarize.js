@@ -21,10 +21,6 @@ module.exports = async function (params) {
         return
     }
 
-    // console.log(
-    //     `Notarizing ${appId} found at ${appPath} with Apple ID ${process.env.APPLE_ID} and pass ${process.env.APPLE_ID_PASSWORD}`
-    // )
-
     console.log(
         `Notarizing ${appId} found at ${appPath} with Apple ID ${process.env.APPLE_ID}`
     )

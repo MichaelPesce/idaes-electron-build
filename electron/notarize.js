@@ -10,7 +10,7 @@ module.exports = async function (params) {
 
     console.log('afterSign hook triggered', params)
 
-    let appId = 'com.electron.watertap-ui'
+    let appId = `com.electron.${process.env.project}-ui`
 
     let appPath = path.join(
         params.appOutDir,

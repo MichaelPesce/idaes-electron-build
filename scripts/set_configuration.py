@@ -147,9 +147,13 @@ def generatePackageJson(project, version, artifact_name, output_path="../electro
 def setEnvVariables(project, version):
     working_dir = pathlib.Path(__file__).parent.resolve()
     hook_env_path = os.path.join(working_dir,"../pyinstaller/hooks/.env")
+    electron_env_path = os.path.join(working_dir,"../electron/.env")
     react_app_env_path = os.path.join(working_dir,"../electron/idaes-flowsheet-processor-ui/frontend/.env")
 
     with open(hook_env_path, "w") as f:
+        f.write(f"project={project}")
+
+    with open(electron_env_path, "w") as f:
         f.write(f"project={project}")
 
     with open(react_app_env_path, "w") as f:

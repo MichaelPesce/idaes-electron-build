@@ -1,0 +1,55 @@
+name: Trigger Application Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: "Operating system"
+        type: string
+        default: win64
+      os-version:
+        description: "Operating system version"
+        type: string
+        default: windows-latest
+      artifact-file-extension:
+        description: "File extension for the build artifact"
+        type: string
+        default: exe
+      project:
+        description: "Project name"
+        type: string
+        default: watertap
+      pip-install-target:
+        description: "Pip install target"
+        type: string
+        default: watertap@git+https://github.com/watertap-org/watertap@main
+      artifact-name:
+        description: "Artifact name"
+        type: string
+        default: WaterTAP-Flowsheet-Processor
+      idaes-flowsheet-processor-ui-repo:
+        description: "IDAES Flowsheet Processor UI repository URL"
+        type: string
+        default: watertap-org/idaes-flowsheet-processor-ui
+      idaes-flowsheet-processor-ui-ref:
+        description: "Branch or tag for the IDAES Flowsheet Processor UI repository"
+        type: string
+        default: main
+      package-build-number:
+        description: "Package build number"
+        type: string
+
+jobs:
+  call-reusable-workflow:
+    uses: ./.github/workflows/reusable-workflow.yml
+    with:
+      os: ${{ inputs.os }}
+      os-version: ${{ inputs.os-version }}
+      artifact-file-extension: ${{ inputs.artifact-file-extension }}
+      project: ${{ inputs.project }}
+      pip-install-target: ${{ inputs.pip-install-target }}
+      artifact-name: ${{ inputs.artifact-name }}
+      idaes-flowsheet-processor-ui-repo: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
+      idaes-flowsheet-processor-ui-ref: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
+      package-build-number: ${{ inputs.package-build-number }}
+    secrets: inherit

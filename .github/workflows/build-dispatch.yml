@@ -1,15 +1,22 @@
-name: Trigger Application Build
+name: Application Build Dispatch
 
 on:
   workflow_dispatch:
     inputs:
       os:
         description: "Operating system"
-        type: string
+        type: choice
+        options:
+        - wind64
+        - arm64
         default: win64
+      ## TODO: dynamically set os-version, file-extension in the electron-build workflow
       os-version:
         description: "Operating system version"
-        type: string
+        type: choice
+        options:
+          - windows-latest
+          - macos-latest
         default: windows-latest
       artifact-file-extension:
         description: "File extension for the build artifact"
@@ -17,7 +24,11 @@ on:
         default: exe
       project:
         description: "Project name"
-        type: string
+        type: choice
+        options:
+          - watertap
+          - prommis
+          - idaes
         default: watertap
       pip-install-target:
         description: "Pip install target"
@@ -40,8 +51,9 @@ on:
         type: string
 
 jobs:
-  call-electron-build:
+  electron-build:
     uses: ./.github/workflows/electron-build.yml
+    name: ${{ inputs.project }} ${{ inputs.os }} Build
     with:
       os: ${{ inputs.os }}
       os-version: ${{ inputs.os-version }}

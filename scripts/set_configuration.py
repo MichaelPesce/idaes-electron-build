@@ -116,7 +116,7 @@ def generatePackageJson(project, ui_version, artifact_name, output_path="../elec
         package_json["name"] = "idaes-flowsheet-processor-ui"
         package_json["build"]["productName"] = "IDAES-Flowsheet-Processor"
         package_json["build"]["appId"] = "com.electron.idaes-flowsheet-processor-ui"
-        icon = "build/idaes-logo-white.ico"
+        icon = "build/idaes-logo.ico"
     elif project == "watertap":
         package_json["name"] = "watertap-flowsheet-processor-ui"
         package_json["build"]["productName"] = "WaterTAP-Flowsheet-Processor"

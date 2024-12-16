@@ -40,8 +40,8 @@ on:
         type: string
 
 jobs:
-  call-reusable-workflow:
-    uses: ./.github/workflows/reusable-workflow.yml
+  call-electron-build:
+    uses: ./.github/workflows/electron-build.yml
     with:
       os: ${{ inputs.os }}
       os-version: ${{ inputs.os-version }}

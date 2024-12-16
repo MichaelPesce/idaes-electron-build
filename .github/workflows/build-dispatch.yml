@@ -41,11 +41,9 @@ on:
 jobs:
   electron-build:
     uses: ./.github/workflows/electron-build.yml
-    name: ${{ inputs.project }} ${{ inputs.os }} Build
+    name: ${{ inputs.project }} ${{ inputs.os-version }} Build
     with:
-      os: ${{ inputs.os }}
       os-version: ${{ inputs.os-version }}
-      artifact-file-extension: ${{ inputs.artifact-file-extension }}
       project: ${{ inputs.project }}
       pip-install-target: ${{ inputs.pip-install-target }}
       artifact-name: ${{ inputs.artifact-name }}

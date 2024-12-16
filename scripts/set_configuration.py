@@ -184,7 +184,10 @@ if __name__ == "__main__":
         project = "watertap"
     if project_version is None:
         print(f"project version is none. Attempting to get project version from python environment")
-        project_version = version(project)
+        if project == "idaes":
+            project_version = version("idaes_pse")
+        else:
+            project_version = version(project)
         print(f"using project version: {project_version}")
 
     generatePackageJson(project=project, ui_version=ui_version, artifact_name=artifact_name)

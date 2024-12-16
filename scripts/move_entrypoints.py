@@ -9,7 +9,7 @@ from pathlib import Path
 ## currently, one of those is the python package wheel
 ## unknown why certain packages make it into the executable and others do not
 
-ENTRYPOINTS_PACKAGE = "wheel"
+ENTRYPOINTS_PACKAGE = "idaes_pse"
 
 def update_entry_points(project):
 

@@ -3,14 +3,6 @@ name: Application Build Dispatch
 on:
   workflow_dispatch:
     inputs:
-      os:
-        description: "Operating system"
-        type: choice
-        options:
-        - wind64
-        - arm64
-        default: win64
-      ## TODO: dynamically set os-version, file-extension in the electron-build workflow
       os-version:
         description: "Operating system version"
         type: choice
@@ -18,10 +10,6 @@ on:
           - windows-latest
           - macos-latest
         default: windows-latest
-      artifact-file-extension:
-        description: "File extension for the build artifact"
-        type: string
-        default: exe
       project:
         description: "Project name"
         type: choice

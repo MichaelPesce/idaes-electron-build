@@ -3,15 +3,9 @@ run-name: App Build For ${{ inputs.project }}
 on:
   workflow_call:
     inputs:
-      os:
-        type: string
-        default: win64
       os-version:
         type: string
         default: windows-latest
-      artifact-file-extension:
-        type: string
-        default: exe
       project:
         type: string
         default: watertap
@@ -62,10 +56,8 @@ defaults:
 
 jobs:
   electron-build:
-    name: ${{ inputs.os }} build
-
+    name: ${{ inputs.os-version }} build
     runs-on: ${{ inputs.os-version }}
-
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
@@ -115,10 +107,22 @@ jobs:
             echo "build-number=${{ inputs.package-build-number }}" >> $GITHUB_OUTPUT
           fi
 
+        ## Generate os name, file extension based on os-version
+      - name: Generate os name, file extension
+        id: os-specific-values
+        run: |
+          if [ "${{ inputs.os-version }}" == "windows-latest"]; then
+            echo "os=win64" >> $GITHUB_OUTPUT
+            echo "artifact-file-extension=exe" >> $GITHUB_OUTPUT
+          else
+            echo "os=arm64" >> $GITHUB_OUTPUT
+            echo "artifact-file-extension=dmg" >> $GITHUB_OUTPUT
+          fi
+
         ## set full path for artifact (useful to define here because it is referenced multiple times later)
       - name: Set artifact path
         id: artifact-path
-        run: echo "path=electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ inputs.os }}.${{ inputs.artifact-file-extension }}" >> $GITHUB_OUTPUT
+        run: echo "path=electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ steps.os-specific-values.outputs.os }}.${{ steps.os-specific-values.outputs.artifact-file-extension }}" >> $GITHUB_OUTPUT
 
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
@@ -158,7 +162,7 @@ jobs:
           CI: false
         run: npm run build
 
-      - name: Build ${{ inputs.os }} Distribution
+      - name: Build ${{ steps.os-specific-values.outputs.os }} Distribution
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
@@ -166,7 +170,7 @@ jobs:
           TEAM_ID: ${{ secrets.TEAM_ID }}
         working-directory: ./electron
         run: |
-          if [ "${{ inputs.os }}" = "arm64" ]; then
+          if [ "${{ steps.os-specific-values.outputs.os }}" = "arm64" ]; then
             npm run electron-build-mac
           else
             npm run electron-build-win
@@ -177,9 +181,9 @@ jobs:
         run: |
           AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v ${{ steps.artifact-path.outputs.path }}
 
-      - name: Upload artifact for ${{ inputs.os }} build
+      - name: Upload artifact for ${{ steps.os-specific-values.outputs.os }} build
         uses: actions/upload-artifact@v4
         if: always()
         with:
-            name: ${{ inputs.project }}-${{ inputs.os }}-dist
+            name: ${{ inputs.project }}-${{ steps.os-specific-values.outputs.os }}-dist
             path: ${{ steps.artifact-path.outputs.path }}

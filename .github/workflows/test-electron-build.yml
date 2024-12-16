@@ -10,7 +10,7 @@ jobs:
         fail-fast: false
         matrix:
             project: [watertap, prommis, idaes]
-            os: [arm64, win64]
+            os-version: [arm64, win64]
             include: 
                 - project: watertap
                   pip-install-target: watertap@git+https://github.com/watertap-org/watertap@1.2.0rc0
@@ -21,12 +21,6 @@ jobs:
                 - project: idaes
                   pip-install-target: idaes-pse@git+https://github.com/dangunter/idaes-pse@west_coast_wrapper
                   artifact-name: IDAES-Flowsheet-Processor
-                - os: arm64
-                  os-version: macos-latest
-                  artifact-file-extension: dmg
-                - os: win64
-                  os-version: windows-latest
-                  artifact-file-extension: exe
 
     name: ${{ matrix.project }} Electron build 
     uses: ./.github/workflows/electron-build.yml
@@ -36,7 +30,5 @@ jobs:
         artifact-name: ${{ matrix.artifact-name }}
         idaes-flowsheet-processor-ui-repo: MichaelPesce/idaes-flowsheet-processor-ui
         idaes-flowsheet-processor-ui-ref: update-project-versions
-        os: ${{ matrix.os }}
         os-version: ${{ matrix.os-version }}
-        artifact-file-extension: ${{ matrix.artifact-file-extension }}
     secrets: inherit

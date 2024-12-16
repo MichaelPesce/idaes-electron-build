@@ -41,7 +41,7 @@ on:
 jobs:
   electron-build:
     uses: ./.github/workflows/electron-build.yml
-    name: ${{ inputs.project }} ${{ inputs.os-version }} Build
+    name: ${{ inputs.project }} Build
     with:
       os-version: ${{ inputs.os-version }}
       project: ${{ inputs.project }}

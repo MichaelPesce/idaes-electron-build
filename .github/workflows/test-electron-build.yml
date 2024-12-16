@@ -35,7 +35,7 @@ jobs:
         pip-install-target: ${{ matrix.pip-install-target }}
         artifact-name: ${{ matrix.artifact-name }}
         idaes-flowsheet-processor-ui-repo: MichaelPesce/idaes-flowsheet-processor-ui
-        idaes-flowsheet-processor-ui-ref: initial-cleanup
+        idaes-flowsheet-processor-ui-ref: update-project-versions
         os: ${{ matrix.os }}
         os-version: ${{ matrix.os-version }}
         artifact-file-extension: ${{ matrix.artifact-file-extension }}

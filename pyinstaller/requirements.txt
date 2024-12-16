@@ -1,2 +1,3 @@
+importlib_resources
 python-dotenv
 pyinstaller>=5.3,<=6.3

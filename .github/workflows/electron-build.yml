@@ -125,9 +125,12 @@ jobs:
         # run: git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
         run: git clone https://github.com/${{ inputs.idaes-flowsheet-processor-ui-repo }}.git && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout ${{ inputs.idaes-flowsheet-processor-ui-ref }} && pip install --progress-bar off .
 
+      - name: Pip install ${{ inputs.pip-install-target }}
+        run: pip install --progress-bar off ${{ inputs.pip-install-target }}
+
         ## creates package.json and .env files
       - name: Set configuration files
-        run: python scripts/set_configuration.py -p ${{ inputs.project }} -v ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }}
+        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }}
 
       - name: Install Electron JS dependencies
         working-directory: ./electron
@@ -136,9 +139,6 @@ jobs:
       - name: Install frontend JS dependencies
         working-directory: ./electron/idaes-flowsheet-processor-ui/frontend 
         run: npm clean-install
-
-      - name: Pip install ${{ inputs.pip-install-target }}
-        run: pip install --progress-bar off ${{ inputs.pip-install-target }}
 
       - name: Get idaes extensions
         run: idaes get-extensions

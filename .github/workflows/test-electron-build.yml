@@ -2,7 +2,7 @@ name: Test Electron Build
 
 on:
   push:
-    branches: [build]
+    branches: [initial-cleanup]
 
 jobs:
   test-electron-build:
@@ -28,7 +28,7 @@ jobs:
         project: ${{ matrix.project }}
         pip-install-target: ${{ matrix.pip-install-target }}
         artifact-name: ${{ matrix.artifact-name }}
-        idaes-flowsheet-processor-ui-repo: MichaelPesce/idaes-flowsheet-processor-ui
-        idaes-flowsheet-processor-ui-ref: update-project-versions
+        idaes-flowsheet-processor-ui-repo: watertap-org/idaes-flowsheet-processor-ui
+        idaes-flowsheet-processor-ui-ref: main
         os-version: ${{ matrix.os-version }}
     secrets: inherit

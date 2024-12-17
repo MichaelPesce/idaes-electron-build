@@ -19,11 +19,11 @@ on:
           - idaes
         default: watertap
       pip-install-target:
-        description: "Pip install target"
+        description: "Pip target for python project"
         type: string
         default: watertap@git+https://github.com/watertap-org/watertap@main
       artifact-name:
-        description: "Artifact name"
+        description: "Build artifact name"
         type: string
         default: WaterTAP-Flowsheet-Processor
       idaes-flowsheet-processor-ui-repo:

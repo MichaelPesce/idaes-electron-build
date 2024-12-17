@@ -1,8 +1,68 @@
 # idaes-electron-builder
 
-This repository is for building desktop versions of user interaces under the IDAES project.
+This repository is for building desktop versions of user interaces under the IDAES project. It is designed to create deployments in a GitHub workflow.
 
-## Getting started (developer)
+## Running a deployment dispatch
+
+### Prerequisites
+
+The following steps assume that:
+
+1. `gh` is already installed and configured For installation instructions, see https://github.com/cli/cli.
+
+### Run application dispatch for WaterTAP
+
+```sh
+gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-version=windows-latest
+```
+
+### Run application dispatch for IDAES
+
+```sh
+gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-version=windows-latest
+```
+
+### Run application dispatch for PROMMIS
+
+```sh
+gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-version=windows-latest
+```
+
+These commands will initiate a windows deployment. For mac, use os-version=macos-latest. For a complete set of input options, see below:
+- project
+  - type: choice
+  - options:
+    - watertap
+    - prommis
+    - idaes
+  - description: project name
+- os-version
+  - type: choice
+  - options:
+    - windows-latest
+    - macos-latest
+  - description: operating system
+- pip-install-target
+  - type: string
+  - default: watertap@git+https://github.com/watertap-org/watertap@main
+  - description: pip target for python project
+- artifact-name
+  - type: string
+  - default: {project}-Flowsheet-Processor
+  - description: Build artifact name
+- idaes-flowsheet-processor-ui-repo
+  - type: string
+  - default: watertap-org/idaes-flowsheet-processor-ui
+  - description: IDAES Flowsheet Processor UI repository URL. Can be replaced by forks such as {github-user}/idaes-flowsheet-processor-ui
+- idaes-flowsheet-processor-ui-ref
+  - type: string
+  - default: main
+  - description: Branch or tag for IDAES Flowsheet Processor UI repository
+- package-build-number
+  - type: string
+  - description: package build number
+
+## Deploying local applications
 
 ### Prerequisites
 

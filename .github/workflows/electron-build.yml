@@ -111,7 +111,7 @@ jobs:
       - name: Generate os name, file extension
         id: os-specific-values
         run: |
-          if [ "${{ inputs.os-version }}" = "windows-latest" ]; then
+          if [ "${{ inputs.os-version }}" == "windows-latest" ]; then
             echo "os=win64" >> $GITHUB_OUTPUT
             echo "artifact-file-extension=exe" >> $GITHUB_OUTPUT
           else

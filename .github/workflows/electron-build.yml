@@ -101,7 +101,7 @@ jobs:
       - name: Generate Package Build Number
         id: generate-build-number
         run: |
-          if [ -z "${{ inputs.package-build-number }}"]; then
+          if [ -z "${{ inputs.package-build-number }}" ]; then
             echo "build-number=$(date +'%y.%m.%d')" >> $GITHUB_OUTPUT
           else
             echo "build-number=${{ inputs.package-build-number }}" >> $GITHUB_OUTPUT
@@ -111,7 +111,7 @@ jobs:
       - name: Generate os name, file extension
         id: os-specific-values
         run: |
-          if [ "${{ inputs.os-version }}" == "windows-latest"]; then
+          if [ "${{ inputs.os-version }}" = "windows-latest" ]; then
             echo "os=win64" >> $GITHUB_OUTPUT
             echo "artifact-file-extension=exe" >> $GITHUB_OUTPUT
           else
@@ -126,7 +126,6 @@ jobs:
 
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
-        # run: git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
         run: git clone https://github.com/${{ inputs.idaes-flowsheet-processor-ui-repo }}.git && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout ${{ inputs.idaes-flowsheet-processor-ui-ref }} && pip install --progress-bar off .
 
       - name: Pip install ${{ inputs.pip-install-target }}

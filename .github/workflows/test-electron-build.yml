@@ -21,7 +21,7 @@ jobs:
                   pip-install-target: idaes-pse@git+https://github.com/dangunter/idaes-pse@west_coast_wrapper
                   artifact-name: IDAES-Flowsheet-Processor
 
-    name: ${{ matrix.project }} Electron build 
+    name: ${{ matrix.project }} 
     uses: ./.github/workflows/electron-build.yml
     with:
         project: ${{ matrix.project }}

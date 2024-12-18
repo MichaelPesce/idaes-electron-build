@@ -9,7 +9,7 @@ from pathlib import Path
 ## currently, one of those is the python package wheel
 ## unknown why certain packages make it into the executable and others do not
 
-ENTRYPOINTS_PACKAGE = "idaes_pse"
+ENTRYPOINTS_PACKAGE = "wheel"
 
 def update_entry_points(project):
 
@@ -52,8 +52,15 @@ def update_entry_points(project):
 
     print(f"globbing from {entrypoints_src_path} to {entrypoints_dst_path}")
 
-    entrypoints_src = glob.glob(entrypoints_src_path)[0]
-    entrypoints_dst = glob.glob(entrypoints_dst_path)[0]
+    entrypoints_src_glob = glob.glob(entrypoints_src_path)
+    entrypoints_dst_glob = glob.glob(entrypoints_dst_path)
+
+    print(f"entrypoints_src_glob: {entrypoints_src_glob}\nentrypoints_dst_glob: {entrypoints_dst_glob}")
+
+    entrypoints_src = entrypoints_src_glob[0]
+    entrypoints_dst = entrypoints_dst_glob[0]
+
+    print(f"entrypoints_src: {entrypoints_src}\nentrypoints_dst: {entrypoints_dst}")
 
     entry_points = []
     start_getting_entries = False

@@ -1,29 +1,24 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
-import watertap
 from pathlib import Path 
 import os
-
-# get actual water path path incase its dev
-pkg_path = Path(watertap.__file__).parent
 
 sys.setrecursionlimit(5000)
 
 block_cipher = None
 
-# this file is not actually needed there, but we need the core directory 
-# to be present in the python executable to avoid errors being thrown
-added_files = [ 
-        (os.path.join(pkg_path,"data/techno_economic/metab.yaml"), os.path.join("pkg_path","core"))
-        ]
+## get idaes-flowsheet-processor-ui path
+import idaes_flowsheet_processor_ui
+pkg_path = Path(idaes_flowsheet_processor_ui.__file__).parent
 
 a = Analysis(
-    ['main.py'],
+    # ['../electron/idaes-flowsheet-processor-ui/backend/src/idaes_flowsheet_processor_ui/main.py'],
+    [os.path.join(pkg_path,"main.py")],
     pathex=[],
     binaries=[],
-    datas=added_files,
+    datas=[],
     hiddenimports=[],
-    hookspath=['main-hooks'],
+    hookspath=['hooks'],
     hooksconfig={},
     runtime_hooks=[],
     excludes=['bson', 'pymongo','psutil','lxml'],
@@ -58,6 +53,6 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=True,
-    upx_exclude=[],
+    upx_exclude=["api-ms-win-core*.dll"],
     name='main',
 )

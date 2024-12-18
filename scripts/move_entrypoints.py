@@ -5,14 +5,20 @@ import argparse
 
 from pathlib import Path
 
+## the entrypoints need to be stored in a package that will have a 'dist.info' folder in the final python executable
+## currently, one of those is the python package wheel
+## unknown why certain packages make it into the executable and others do not
+
+ENTRYPOINTS_PACKAGE = "wheel"
+
 def update_entry_points(project):
 
-    ## temporarily use workarounds while storing flowsheet entrypoints in watertap-ui
+    ## temporarily use workarounds
     if project == "prommis":
-        conda_package_name = "watertap_ui"
+        conda_package_name = "prommis"
         entry_points_project_name = "prommis"
     elif project == "idaes":
-        conda_package_name = "watertap_ui"
+        conda_package_name = "idaes_pse"
         entry_points_project_name = "idaes"
     else:
         conda_package_name = project
@@ -26,28 +32,35 @@ def update_entry_points(project):
             entrypoints_src_path = (
                 f"{conda_prefix}/lib/python*/site-packages/{conda_package_name}-*info/entry_points.txt"
             )
-            entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/setuptools-*info/entry_points.txt"
+            entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
         elif sys.platform == "linux":
             print("linux")
             entrypoints_src_path = (
                 f"{conda_prefix}/lib/python*/site-packages/{conda_package_name}-*info/entry_points.txt"
             )
-            entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/setuptools-*info/entry_points.txt"
+            entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
         else:
             # print("windows")
             entrypoints_src_path = (
                 f"{conda_prefix}/lib/site-packages/{conda_package_name}-*info/entry_points.txt"
             )
             entrypoints_dst_path = (
-                f"{conda_prefix}/lib/site-packages/setuptools-*info/entry_points.txt"
+                f"{conda_prefix}/lib/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
             )
     except Exception as e:
         print(f"unable to get entry points src/dst: {e}")
 
     print(f"globbing from {entrypoints_src_path} to {entrypoints_dst_path}")
 
-    entrypoints_src = glob.glob(entrypoints_src_path)[0]
-    entrypoints_dst = glob.glob(entrypoints_dst_path)[0]
+    entrypoints_src_glob = glob.glob(entrypoints_src_path)
+    entrypoints_dst_glob = glob.glob(entrypoints_dst_path)
+
+    print(f"entrypoints_src_glob: {entrypoints_src_glob}\nentrypoints_dst_glob: {entrypoints_dst_glob}")
+
+    entrypoints_src = entrypoints_src_glob[0]
+    entrypoints_dst = entrypoints_dst_glob[0]
+
+    print(f"entrypoints_src: {entrypoints_src}\nentrypoints_dst: {entrypoints_dst}")
 
     entry_points = []
     start_getting_entries = False

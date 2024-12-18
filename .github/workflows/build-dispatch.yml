@@ -1,0 +1,53 @@
+name: Application Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      os-version:
+        description: "Operating system version"
+        type: choice
+        options:
+          - windows-latest
+          - macos-latest
+        default: windows-latest
+      project:
+        description: "Project name"
+        type: choice
+        options:
+          - watertap
+          - prommis
+          - idaes
+        default: watertap
+      pip-install-target:
+        description: "Pip target for python project"
+        type: string
+        default: watertap@git+https://github.com/watertap-org/watertap@main
+      artifact-name:
+        description: "Build artifact name"
+        type: string
+        default: WaterTAP-Flowsheet-Processor
+      idaes-flowsheet-processor-ui-repo:
+        description: "IDAES Flowsheet Processor UI repository URL"
+        type: string
+        default: watertap-org/idaes-flowsheet-processor-ui
+      idaes-flowsheet-processor-ui-ref:
+        description: "Branch or tag for the IDAES Flowsheet Processor UI repository"
+        type: string
+        default: main
+      package-build-number:
+        description: "Package build number"
+        type: string
+
+jobs:
+  electron-build:
+    uses: ./.github/workflows/electron-build.yml
+    name: ${{ inputs.project }} Build
+    with:
+      os-version: ${{ inputs.os-version }}
+      project: ${{ inputs.project }}
+      pip-install-target: ${{ inputs.pip-install-target }}
+      artifact-name: ${{ inputs.artifact-name }}
+      idaes-flowsheet-processor-ui-repo: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
+      idaes-flowsheet-processor-ui-ref: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
+      package-build-number: ${{ inputs.package-build-number }}
+    secrets: inherit

@@ -1,0 +1,10 @@
+name: flowsheet-processor-env
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - pip
+  - nodejs=20.9.0
+  - pip:
+    - -r pyinstaller/requirements.txt

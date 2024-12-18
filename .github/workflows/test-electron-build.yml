@@ -1,0 +1,33 @@
+name: Test Electron Build
+
+on:
+  pull_request:
+
+jobs:
+  test-electron-build:
+    strategy:
+        fail-fast: false
+        matrix:
+            project: [watertap, prommis, idaes]
+            os-version: [macos-latest, windows-latest]
+            include: 
+                - project: watertap
+                  pip-install-target: watertap@git+https://github.com/watertap-org/watertap@1.2.0rc0
+                  artifact-name: WaterTAP-Flowsheet-Processor
+                - project: prommis
+                  pip-install-target: prommis@git+https://github.com/prommis/prommis@0.6.0rc0
+                  artifact-name: PROMMIS-Flowsheet-Processor
+                - project: idaes
+                  pip-install-target: idaes-pse@git+https://github.com/dangunter/idaes-pse@west_coast_wrapper
+                  artifact-name: IDAES-Flowsheet-Processor
+
+    name: ${{ matrix.project }} 
+    uses: ./.github/workflows/electron-build.yml
+    with:
+        project: ${{ matrix.project }}
+        pip-install-target: ${{ matrix.pip-install-target }}
+        artifact-name: ${{ matrix.artifact-name }}
+        idaes-flowsheet-processor-ui-repo: watertap-org/idaes-flowsheet-processor-ui
+        idaes-flowsheet-processor-ui-ref: main
+        os-version: ${{ matrix.os-version }}
+    secrets: inherit

@@ -1,24 +1,19 @@
-import os
-from collections import namedtuple
-from enum import Enum
-from glob import glob
 import importlib
 from pathlib import Path
 import re
-from typing import Callable, Optional, Dict, Union, TypeVar
-from uuid import uuid4
-import sys
+import os
+from dotenv import load_dotenv
 
-from pathlib import Path
-
+load_dotenv()
 
 imports = set()
 datas = []
 
-# add all modules to watertap modules hidden imports
+project = os.getenv("project")
+print(f"project is {project}")
 
-# for package in ["watertap", "pyomo", "scipy", "prommis"]:
-for package in ["watertap", "pyomo", "scipy"]:
+packages = ["pyomo", "scipy", project]
+for package in packages:
     pkg = importlib.import_module(package)
     try:
         # base_folder = Path(pkg.__path__[0])
@@ -98,10 +93,15 @@ for package in ["watertap", "pyomo", "scipy"]:
         except Exception as err:  # assume the import could do bad things
             print(f"Import of file '{yaml_file}' failed: {err}")
             continue
-datas.append((src_name, "watertap/core"))
+
 hiddenimports = list(imports)
 # add lorem ipsum.txt for jaraco
-datas.append(('internal/assets/Lorem ipsum.txt', 'jaraco/text'))
+datas.append(("./Lorem ipsum.txt", "jaraco/text"))
+if project == "watertap":
+    datas.append((src_name, "watertap/core"))
+
+# print(f"datas: \n{datas}")
+# print(f"hiddenimports: \n{hiddenimports}")
 
 pyomo_imports = [
     "networkx",

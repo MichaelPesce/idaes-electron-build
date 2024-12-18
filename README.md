@@ -14,19 +14,19 @@ The following steps assume that:
 ### Run application dispatch for WaterTAP
 
 ```sh
-gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-version=windows-latest
+gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-version=windows-latest -f artifact-name=WaterTAP-Flowsheet-Processor -f pip-install-target=watertap@git+https://github.com/watertap-org/watertap@main
 ```
 
 ### Run application dispatch for IDAES
 
 ```sh
-gh workflow run .github/workflows/build-dispatch.yml -f project=idaes -f os-version=windows-latest
+gh workflow run .github/workflows/build-dispatch.yml -f project=idaes -f os-version=windows-latest -f artifact-name=IDAES-Flowsheet-Processor -f pip-install-target=idaes-pse@git+https://github.com/IDAES/idaes-pse
 ```
 
 ### Run application dispatch for PROMMIS
 
 ```sh
-gh workflow run .github/workflows/build-dispatch.yml -f project=prommis -f os-version=windows-latest
+gh workflow run .github/workflows/build-dispatch.yml -f project=prommis -f os-version=windows-latest -f artifact-name=PROMMIS-Flowsheet-Processor -f pip-install-target=prommis@git+https://github.com/prommis/prommis@main
 ```
 
 These commands will initiate a windows deployment. For mac, use os-version=macos-latest. For a complete set of input options, see below:
@@ -49,7 +49,7 @@ These commands will initiate a windows deployment. For mac, use os-version=macos
   - description: pip target for python project
 - artifact-name
   - type: string
-  - default: {project}-Flowsheet-Processor
+  - default: WaterTAP-Flowsheet-Processor
   - description: Build artifact name
 - idaes-flowsheet-processor-ui-repo
   - type: string

@@ -1,4 +1,4 @@
-name: Application Build Dispatch
+name: Application Build
 
 on:
   workflow_dispatch:

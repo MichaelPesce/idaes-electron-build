@@ -9,6 +9,7 @@ This repository is for building desktop versions of user interaces under the IDA
 The following steps assume that:
 
 1. `gh` is already installed and configured For installation instructions, see https://github.com/cli/cli.
+2. This repository (i.e. https://github.com/watertap-org/idaes-electron-build) has been cloned locally and the working directory is set to the root of the repository
 
 ### Run application dispatch for WaterTAP
 
@@ -19,13 +20,13 @@ gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-v
 ### Run application dispatch for IDAES
 
 ```sh
-gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-version=windows-latest
+gh workflow run .github/workflows/build-dispatch.yml -f project=idaes -f os-version=windows-latest
 ```
 
 ### Run application dispatch for PROMMIS
 
 ```sh
-gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-version=windows-latest
+gh workflow run .github/workflows/build-dispatch.yml -f project=prommis -f os-version=windows-latest
 ```
 
 These commands will initiate a windows deployment. For mac, use os-version=macos-latest. For a complete set of input options, see below:

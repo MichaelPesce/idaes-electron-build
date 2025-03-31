@@ -142,7 +142,7 @@ jobs:
 
         ## creates package.json and .env files
       - name: Set configuration files
-        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }} -au ${{ steps.get-author.outputs.AUTHOR }}
+        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }} -au "${{ steps.get-author.outputs.AUTHOR }}"
 
       - name: Install Electron JS dependencies
         working-directory: ./electron

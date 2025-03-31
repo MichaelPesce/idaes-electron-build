@@ -140,12 +140,12 @@ jobs:
       - name: Pip install ${{ inputs.pip-install-target }}
         run: pip install --progress-bar off ${{ inputs.pip-install-target }}
 
-      - name: log package.json
-        run: cat ./electron/package.json
-
         ## creates package.json and .env files
       - name: Set configuration files
         run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }} -au "${{ steps.get-author.outputs.AUTHOR }}"
+
+      - name: log package.json
+        run: cat ./electron/package.json
 
       - name: Install Electron JS dependencies
         working-directory: ./electron

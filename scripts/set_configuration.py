@@ -111,7 +111,7 @@ def getVersionDate():
 def generatePackageJson(project, ui_version, artifact_name, author, output_path="../electron/package.json"):
     ## If email is empty what to use hmmm
     if "<>" in author:
-        author.replace("<>", "<unknown@email.com>")
+        author = author.replace("<>", "<unknown@email.com>")
         
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = ui_version

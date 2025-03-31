@@ -69,13 +69,8 @@ jobs:
       - name: Get email of workflow initiator
         id: get-author
         run: |
-          email=$(curl -s -X GET \
-            https://api.github.com/users/${GITHUB_ACTOR}/emails \
-            -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-            -H 'Accept: application/json' | jq -r '.[] | select(.primary == true) | .email')
-          echo "Workflow triggered by: ${{ github.actor }} ($email)"
-          echo "EMAIL=$email" >> $GITHUB_OUTPUT
-          echo "AUTHOR=${{ github.actor }} <$email>" >> $GITHUB_OUTPUT
+          echo "EMAIL=${{ github.event.pusher.email }}" >> $GITHUB_OUTPUT
+          echo "AUTHOR=${{ github.actor }} <${{ github.event.pusher.email }}>" >> $GITHUB_OUTPUT
     
         ## install Azure signtool for windows builds
       - name: Install Azure Signtool

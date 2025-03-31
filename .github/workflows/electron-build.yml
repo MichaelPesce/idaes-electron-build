@@ -65,6 +65,14 @@ jobs:
           environment-file: environment.yml
           activate-environment: flowsheet-processor-env
           miniforge-version: latest
+
+      - name: print github author
+        run: |
+          echo ${{ github.actor }}
+
+      - name: print triggering author
+        run: |
+          echo ${{ github.triggering_actor }}
       
         ## install Azure signtool for windows builds
       - name: Install Azure Signtool

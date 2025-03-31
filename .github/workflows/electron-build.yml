@@ -66,14 +66,18 @@ jobs:
           activate-environment: flowsheet-processor-env
           miniforge-version: latest
 
-      - name: print github author
+      - name: Get email of workflow initiator
+        id: get-author
         run: |
-          echo ${{ github.actor }}
-
-      - name: print triggering author
-        run: |
-          echo ${{ github.triggering_actor }}
-      
+          email=$(curl -s -X GET \
+            https://api.github.com/users/${GITHUB_ACTOR} \
+            -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -H 'Accept: application/json' | jq -r '.email')
+          echo "Workflow triggered by: ${{ github.actor }} ($email)"
+          echo "EMAIL=$email" >> $GITHUB_OUTPUT
+          echo "AUTHOR=${{ github.actor }} <$email>" >> $GITHUB_OUTPUT
+          echo "${{ github.actor }} <$email>"
+    
         ## install Azure signtool for windows builds
       - name: Install Azure Signtool
         if: runner.os == 'Windows'
@@ -144,7 +148,7 @@ jobs:
 
         ## creates package.json and .env files
       - name: Set configuration files
-        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }} -au ${{ github.actor }}
+        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }} -au ${{ steps.get-author.outputs.AUTHOR }}
 
       - name: Install Electron JS dependencies
         working-directory: ./electron

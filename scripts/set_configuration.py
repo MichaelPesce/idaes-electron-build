@@ -97,9 +97,10 @@ JSON_FRAMEWORK = {
       "entitlementsInherit": "build/entitlements.mac.inherit.plist",
     },
     "win": {
+        "target": "nsis"
     },
     "linux": {
-      "target": "Deb",
+      "target": "deb",
       "category": "Utility",
     }
   }
@@ -132,9 +133,10 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
 
     package_json["build"]["mac"]["icon"] = icon
     package_json["build"]["win"]["icon"] = icon
-    package_json["build"]["linux"]["icon"] = icon
+    # package_json["build"]["linux"]["icon"] = icon
 
     package_json["build"]["win"]["target"] = "nsis"
+    package_json["build"]["mac"]["target"] = "dmg"
     package_json["build"]["linux"]["target"] = "deb"
 
     ## add artifact names with version

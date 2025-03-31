@@ -116,6 +116,7 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = ui_version
     package_json["author"] = author
+    package_json["email"] = author
     if project == "idaes":
         package_json["name"] = "idaes-flowsheet-processor-ui"
         package_json["build"]["productName"] = "IDAES-Flowsheet-Processor"

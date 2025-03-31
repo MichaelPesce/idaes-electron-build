@@ -109,9 +109,6 @@ def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
 def generatePackageJson(project, ui_version, artifact_name, author, output_path="../electron/package.json"):
-    ## If email is empty what to use hmmm
-    if "<>" in author:
-        author = author.replace("<>", "<unknown@email.com>")
         
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = ui_version
@@ -138,6 +135,7 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
     package_json["build"]["linux"]["icon"] = icon
 
     package_json["build"]["win"]["target"] = "nsis"
+    package_json["build"]["lin"]["target"] = "deb"
 
     ## add artifact names with version
     package_json["build"]["nsis"]["artifactName"] = f"{artifact_name}_{ui_version}_win64.exe"
@@ -183,7 +181,9 @@ if __name__ == "__main__":
     if artifact_name is None:
         artifact_name = f"{project}-Flowsheet-Processor"
     if author is None:
-        author = "unknown"
+        author = "unknown <unknown>"
+    if "<>" in author:
+        author = author.replace("<>", "<unknown@email.com>")
 
     valid_projects = ["watertap", "prommis", "idaes"]
     if project is not None:

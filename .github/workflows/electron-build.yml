@@ -114,7 +114,10 @@ jobs:
           if [ "${{ inputs.os-version }}" == "windows-latest" ]; then
             echo "os=win64" >> $GITHUB_OUTPUT
             echo "artifact-file-extension=exe" >> $GITHUB_OUTPUT
-          else
+          elif [ "${{ inputs.os-version }}" == "ubuntu-22.04" ]; then
+            echo "os=amd64" >> $GITHUB_OUTPUT
+            echo "artifact-file-extension=deb" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.os-version }}" == "macos-latest" ]; then
             echo "os=arm64" >> $GITHUB_OUTPUT
             echo "artifact-file-extension=dmg" >> $GITHUB_OUTPUT
           fi
@@ -133,7 +136,7 @@ jobs:
 
         ## creates package.json and .env files
       - name: Set configuration files
-        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }}
+        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }} -au ${{ github.actor }}
 
       - name: Install Electron JS dependencies
         working-directory: ./electron
@@ -171,8 +174,10 @@ jobs:
         run: |
           if [ "${{ steps.os-specific-values.outputs.os }}" = "arm64" ]; then
             npm run electron-build-mac
-          else
+          elif [ "${{ steps.os-specific-values.outputs.os }}" = "win64" ]; then
             npm run electron-build-win
+          elif [ "${{ steps.os-specific-values.outputs.os }}" = "amd64" ]; then
+            npm run electron-build-lin
           fi
 
       - name: Sign Windows Distribution

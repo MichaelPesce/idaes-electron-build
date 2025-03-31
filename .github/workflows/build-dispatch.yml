@@ -9,6 +9,7 @@ on:
         options:
           - windows-latest
           - macos-latest
+          - ubuntu-22.04
         default: windows-latest
       project:
         description: "Project name"

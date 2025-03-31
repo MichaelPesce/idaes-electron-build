@@ -31,6 +31,7 @@ JSON_FRAMEWORK = {
     "build-replace-backend-win": "npm run remove-previous-backend-build-win && npm run build-backend || npm run build-backend",
     "electron-build-mac": "npm run remove-previous-dist && electron-builder -m || electron-builder -m",
     "electron-build-win": "npm run remove-previous-dist-win && electron-builder -w || electron-builder -w",
+    "electron-build-lin": "npm run remove-previous-dist && electron-builder -l || electron-builder -l",
     "dist:mac": "npm run build-replace-backend && npm run build-frontend && npm run electron-build-mac",
     "dist:win": "npm run build-replace-backend-win && npm run build-frontend-win && npm run electron-build-win",
     "dist:lin": "npm run build-replace-backend && npm run build-frontend && npm run electron-build-lin",
@@ -107,7 +108,7 @@ JSON_FRAMEWORK = {
 def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
-def generatePackageJson(project, ui_version, artifact_name, output_path="../electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
+def generatePackageJson(project, ui_version, artifact_name, author, output_path="../electron/package.json"):
     
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = ui_version
@@ -166,15 +167,19 @@ if __name__ == "__main__":
     parser.add_argument("-bv", "--build_version", help="Build version, typically in date format (yy.mm.dd). If not provided, will use current date.")
     parser.add_argument("-a", "--artifact_name", help="Artifact name. If not provided, will use provided project to create artifact name.")
     parser.add_argument("-pv", "--project_version", help="Project version, ie the version of WaterTAP, IDAES, or PROMMIS that is installed.")
+    parser.add_argument("-au", "--author", help="Author who created the build.")
     args = parser.parse_args()
     project = args.project
     ui_version = args.build_version
     artifact_name = args.artifact_name
     project_version = args.project_version
+    author = args.author
     if ui_version is None:
         ui_version = getVersionDate()
     if artifact_name is None:
         artifact_name = f"{project}-Flowsheet-Processor"
+    if author is None:
+        author = "unknown"
 
     valid_projects = ["watertap", "prommis", "idaes"]
     if project is not None:
@@ -190,5 +195,5 @@ if __name__ == "__main__":
             project_version = version(project)
         print(f"using project version: {project_version}")
 
-    generatePackageJson(project=project, ui_version=ui_version, artifact_name=artifact_name)
+    generatePackageJson(project=project, ui_version=ui_version, author=author, artifact_name=artifact_name)
     setEnvVariables(project=project, ui_version=ui_version, project_version=project_version)

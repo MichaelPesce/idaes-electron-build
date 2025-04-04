@@ -104,12 +104,6 @@ JSON_FRAMEWORK = {
     "linux": {
       "target": "flatpak",
       "category": "Utility",
-      "depends": [
-        "libgfortran5",
-        "libgomp1",
-        "liblapack3",
-        "libblas3"
-      ],
     }
   }
 }

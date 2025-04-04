@@ -8,4 +8,7 @@ def remove_ico_files(directory):
 
 if __name__ == "__main__":
     directory = output_path="../electron/build"
-    remove_ico_files(directory)
+    try:
+        remove_ico_files(directory)
+    except Exception as e:
+        print(f"unable to remove icons: {e}")

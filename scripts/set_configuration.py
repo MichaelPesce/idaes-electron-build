@@ -67,14 +67,16 @@ JSON_FRAMEWORK = {
       "oneClick": False,
       "allowToChangeInstallationDirectory": True,
     },
-    # "deb": {
-    #   "depends": [
-    #     "libgfortran5",
-    #     "libgomp1",
-    #     "liblapack3",
-    #     "libblas3"
-    #   ],
-    # },
+    "deb": {
+      "depends": [
+        "libgfortran5",
+        "libgomp1",
+        "liblapack3",
+        "libblas3"
+      ],
+    },
+    "flatpak": {
+    },
     "files": [
       "dist/**/*",
       "build/**/*",

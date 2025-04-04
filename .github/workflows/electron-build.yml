@@ -79,13 +79,12 @@ jobs:
           dotnet tool install --global AzureSignTool
 
         ## handle linux-only actions
-      - name: Install linux packages, remove icons
+      - name: Install linux packages
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y ruby-dev build-essential libgfortran5 liblapack3 libgomp1 libblas3
           sudo gem install --no-document fpm
-          python scripts/remove_icons.py
 
       - name: Set environment variable
         if: runner.os == 'Linux'
@@ -186,6 +185,12 @@ jobs:
         env:
           CI: false
         run: npm run build
+
+      ## still not sure why this is necessary
+      - name: For linux, remove ico files
+        if: runner.os == 'Linux'
+        run: |
+          python scipts/remove_icons.py
 
       - name: Build ${{ steps.os-specific-values.outputs.os }} Distribution
         env:

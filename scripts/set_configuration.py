@@ -206,3 +206,17 @@ if __name__ == "__main__":
 
     generatePackageJson(project=project, ui_version=ui_version, author=author, artifact_name=artifact_name)
     setEnvVariables(project=project, ui_version=ui_version, project_version=project_version)
+
+
+## for linux we must
+## 1) remoe all .ico files
+## 2) export USE_SYSTEM_FPM = true
+## 3) - sudo apt-get update -y
+##    - sudo apt-get install -y ruby-dev build-essential
+##    - sudo gem install --no-document fpm
+## not sure if the following 4 are necessary:
+##    - sudo apt-get install -y libgfortran5
+##    - sudo apt-get install -y liblapack3
+
+##    - sudo apt-get install -y libgomp1
+##    - sudo apt-get install -y libblas3

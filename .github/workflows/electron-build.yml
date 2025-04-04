@@ -189,8 +189,10 @@ jobs:
       ## still not sure why this is necessary
       - name: For linux, remove ico files
         if: runner.os == 'Linux'
+        working-directory: ./scripts
         run: |
-          python scipts/remove_icons.py
+          ls -a
+          python remove_icons.py
 
       - name: Build ${{ steps.os-specific-values.outputs.os }} Distribution
         env:

@@ -67,14 +67,14 @@ JSON_FRAMEWORK = {
       "oneClick": False,
       "allowToChangeInstallationDirectory": True,
     },
-    "flatpak": {
-      "depends": [
-        "libgfortran5",
-        "libgomp1",
-        "liblapack3",
-        "libblas3"
-      ],
-    },
+    # "deb": {
+    #   "depends": [
+    #     "libgfortran5",
+    #     "libgomp1",
+    #     "liblapack3",
+    #     "libblas3"
+    #   ],
+    # },
     "files": [
       "dist/**/*",
       "build/**/*",
@@ -102,6 +102,12 @@ JSON_FRAMEWORK = {
     "linux": {
       "target": "flatpak",
       "category": "Utility",
+      "depends": [
+        "libgfortran5",
+        "libgomp1",
+        "liblapack3",
+        "libblas3"
+      ],
     }
   }
 }

@@ -67,7 +67,7 @@ JSON_FRAMEWORK = {
       "oneClick": False,
       "allowToChangeInstallationDirectory": True,
     },
-    "deb": {
+    "flatpak": {
       "depends": [
         "libgfortran5",
         "libgomp1",
@@ -100,7 +100,7 @@ JSON_FRAMEWORK = {
         "target": "nsis"
     },
     "linux": {
-      "target": "deb",
+      "target": "flatpak",
       "category": "Utility",
     }
   }
@@ -137,14 +137,14 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
 
     package_json["build"]["win"]["target"] = "nsis"
     package_json["build"]["mac"]["target"] = "dmg"
-    package_json["build"]["linux"]["target"] = "deb"
+    package_json["build"]["linux"]["target"] = "flatpak"
 
     ## add artifact names with version
     package_json["build"]["nsis"]["artifactName"] = f"{artifact_name}_{ui_version}_win64.exe"
     package_json["build"]["win"]["artifactName"] = f"{artifact_name}_{ui_version}_win64.exe"
     package_json["build"]["mac"]["artifactName"] = f"{artifact_name}_{ui_version}_arm64.dmg"
-    package_json["build"]["deb"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.deb"
-    package_json["build"]["linux"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.deb"
+    package_json["build"]["flatpak"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.flatpak"
+    package_json["build"]["linux"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.flatpak"
 
     working_dir = pathlib.Path(__file__).parent.resolve()
     package_json_path = os.path.join(working_dir,output_path)

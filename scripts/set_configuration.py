@@ -102,7 +102,7 @@ JSON_FRAMEWORK = {
         "target": "nsis"
     },
     "linux": {
-      "target": "flatpak",
+      "target": "deb",
       "category": "Utility",
     }
   }
@@ -139,19 +139,19 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
 
     package_json["build"]["win"]["target"] = "nsis"
     package_json["build"]["mac"]["target"] = "dmg"
-    package_json["build"]["linux"]["target"] = "flatpak"
+    package_json["build"]["linux"]["target"] = "deb"
 
     ## add artifact names with version
     package_json["build"]["nsis"]["artifactName"] = f"{artifact_name}_{ui_version}_win64.exe"
     package_json["build"]["win"]["artifactName"] = f"{artifact_name}_{ui_version}_win64.exe"
     package_json["build"]["mac"]["artifactName"] = f"{artifact_name}_{ui_version}_arm64.dmg"
-    package_json["build"]["flatpak"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.flatpak"
-    package_json["build"]["linux"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.flatpak"
+    package_json["build"]["deb"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.deb"
+    package_json["build"]["linux"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.deb"
 
     working_dir = pathlib.Path(__file__).parent.resolve()
     package_json_path = os.path.join(working_dir,output_path)
     with open(package_json_path, "w") as f:
-        json.dump(package_json, f)
+        json.dump(package_json, f, indent=4)
 
 def setEnvVariables(project, ui_version, project_version):
     working_dir = pathlib.Path(__file__).parent.resolve()

@@ -85,7 +85,7 @@ JSON_FRAMEWORK = {
       "main.js"
     ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "build"
     },
     "extraResources": [
       "public/**/*"
@@ -144,7 +144,7 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
 
     package_json["build"]["mac"]["icon"] = icon
     package_json["build"]["win"]["icon"] = icon
-    package_json["build"]["linux"]["icon"] = "icons/512x512.png"
+    package_json["build"]["linux"]["icon"] = "icons/512x512"
 
     package_json["build"]["win"]["target"] = "nsis"
     package_json["build"]["mac"]["target"] = "dmg"

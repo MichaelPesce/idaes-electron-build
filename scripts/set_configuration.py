@@ -130,21 +130,24 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
         package_json["name"] = "idaes-flowsheet-processor-ui"
         package_json["build"]["productName"] = "IDAES-Flowsheet-Processor"
         package_json["build"]["appId"] = "com.electron.idaes-flowsheet-processor-ui"
-        icon = "build/idaes-logo.ico"
+        # icon = "build/idaes-logo.ico"
+        icon = "icons/idaesx512"
     elif project == "watertap":
         package_json["name"] = "watertap-flowsheet-processor-ui"
         package_json["build"]["productName"] = "WaterTAP-Flowsheet-Processor"
         package_json["build"]["appId"] = "com.electron.watertap-flowsheet-processor-ui"
-        icon = "build/nawi-logo.ico"
+        # icon = "build/nawi-logo.ico"
+        icon = "icons/watertapx512"
     elif project == "prommis":
         package_json["name"] = "prommis-flowsheet-processor-ui"
         package_json["build"]["productName"] = "PROMMIS-Flowsheet-Processor"
         package_json["build"]["appId"] = "com.electron.prommis-flowsheet-processor-ui"
-        icon = "build/prommis-logo.ico"
+        # icon = "build/prommis-logo.ico"
+        icon = "icons/prommisx512"
 
     package_json["build"]["mac"]["icon"] = icon
     package_json["build"]["win"]["icon"] = icon
-    package_json["build"]["linux"]["icon"] = "icons/512x512"
+    package_json["build"]["linux"]["icon"] = icon
 
     package_json["build"]["win"]["target"] = "nsis"
     package_json["build"]["mac"]["target"] = "dmg"
@@ -162,7 +165,7 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
     with open(package_json_path, "w") as f:
         json.dump(package_json, f, indent=4)
     
-    renameIcon(working_dir=working_dir, project=project)
+    # renameIcon(working_dir=working_dir, project=project)
 
 def setEnvVariables(project, ui_version, project_version):
     working_dir = pathlib.Path(__file__).parent.resolve()

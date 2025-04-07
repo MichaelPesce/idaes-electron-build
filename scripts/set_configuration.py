@@ -111,8 +111,17 @@ JSON_FRAMEWORK = {
 def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
+def renameIcon(working_dir, project):
+    try:
+        icon_dir = os.path.join(working_dir,"../electron/idaes-flowsheet-processor-ui/frontend/public/icons")
+        src = f"{icon_dir}/{project.lower()}x512.png"
+        dst = f"{icon_dir}/512x512.png"
+        print(f"renaming {src} to {dst}")
+        os.rename(src, dst)
+    except Exception as e:
+        print(f"unable to rename icon: {e}")
+
 def generatePackageJson(project, ui_version, artifact_name, author, output_path="../electron/package.json"):
-        
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = ui_version
     package_json["author"] = author
@@ -152,6 +161,8 @@ def generatePackageJson(project, ui_version, artifact_name, author, output_path=
     package_json_path = os.path.join(working_dir,output_path)
     with open(package_json_path, "w") as f:
         json.dump(package_json, f, indent=4)
+    
+    renameIcon(working_dir=working_dir, project=project)
 
 def setEnvVariables(project, ui_version, project_version):
     working_dir = pathlib.Path(__file__).parent.resolve()

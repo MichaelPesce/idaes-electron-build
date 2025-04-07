@@ -65,12 +65,31 @@ jobs:
           environment-file: environment.yml
           activate-environment: flowsheet-processor-env
           miniforge-version: latest
-      
+
+      - name: Get email of workflow initiator
+        id: get-author
+        run: |
+          echo "EMAIL=${{ github.event.pusher.email }}" >> $GITHUB_OUTPUT
+          echo "AUTHOR=${{ github.actor }} <${{ github.event.pusher.email }}>" >> $GITHUB_OUTPUT
+    
         ## install Azure signtool for windows builds
       - name: Install Azure Signtool
         if: runner.os == 'Windows'
         run: |
           dotnet tool install --global AzureSignTool
+
+        ## handle linux-only actions
+      - name: Install linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ruby-dev build-essential libgfortran5 liblapack3 libgomp1 libblas3
+          sudo gem install --no-document fpm
+
+      - name: Set environment variable
+        if: runner.os == 'Linux'
+        run: |
+          echo "USE_SYSTEM_FPM=true" >> $GITHUB_ENV
       
         ## handle Apple certificate, keychain setup for mac builds
       - name: Install the Apple certificate
@@ -114,7 +133,10 @@ jobs:
           if [ "${{ inputs.os-version }}" == "windows-latest" ]; then
             echo "os=win64" >> $GITHUB_OUTPUT
             echo "artifact-file-extension=exe" >> $GITHUB_OUTPUT
-          else
+          elif [ "${{ inputs.os-version }}" == "ubuntu-22.04" ]; then
+            echo "os=amd64" >> $GITHUB_OUTPUT
+            echo "artifact-file-extension=deb" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.os-version }}" == "macos-latest" ]; then
             echo "os=arm64" >> $GITHUB_OUTPUT
             echo "artifact-file-extension=dmg" >> $GITHUB_OUTPUT
           fi
@@ -133,7 +155,7 @@ jobs:
 
         ## creates package.json and .env files
       - name: Set configuration files
-        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }}
+        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }} -au "${{ steps.get-author.outputs.AUTHOR }}"
 
       - name: Install Electron JS dependencies
         working-directory: ./electron
@@ -161,6 +183,13 @@ jobs:
           CI: false
         run: npm run build
 
+      ## still not sure why this is necessary
+      - name: For linux, remove ico files
+        if: runner.os == 'Linux'
+        working-directory: ./scripts
+        run: |
+          python remove_icons.py
+
       - name: Build ${{ steps.os-specific-values.outputs.os }} Distribution
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -171,8 +200,10 @@ jobs:
         run: |
           if [ "${{ steps.os-specific-values.outputs.os }}" = "arm64" ]; then
             npm run electron-build-mac
-          else
+          elif [ "${{ steps.os-specific-values.outputs.os }}" = "win64" ]; then
             npm run electron-build-win
+          elif [ "${{ steps.os-specific-values.outputs.os }}" = "amd64" ]; then
+            npm run electron-build-lin
           fi
 
       - name: Sign Windows Distribution

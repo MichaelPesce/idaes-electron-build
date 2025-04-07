@@ -31,6 +31,7 @@ JSON_FRAMEWORK = {
     "build-replace-backend-win": "npm run remove-previous-backend-build-win && npm run build-backend || npm run build-backend",
     "electron-build-mac": "npm run remove-previous-dist && electron-builder -m || electron-builder -m",
     "electron-build-win": "npm run remove-previous-dist-win && electron-builder -w || electron-builder -w",
+    "electron-build-lin": "npm run remove-previous-dist && electron-builder -l || electron-builder -l",
     "dist:mac": "npm run build-replace-backend && npm run build-frontend && npm run electron-build-mac",
     "dist:win": "npm run build-replace-backend-win && npm run build-frontend-win && npm run electron-build-win",
     "dist:lin": "npm run build-replace-backend && npm run build-frontend && npm run electron-build-lin",
@@ -74,6 +75,8 @@ JSON_FRAMEWORK = {
         "libblas3"
       ],
     },
+    "flatpak": {
+    },
     "files": [
       "dist/**/*",
       "build/**/*",
@@ -82,7 +85,7 @@ JSON_FRAMEWORK = {
       "main.js"
     ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "build"
     },
     "extraResources": [
       "public/**/*"
@@ -96,9 +99,10 @@ JSON_FRAMEWORK = {
       "entitlementsInherit": "build/entitlements.mac.inherit.plist",
     },
     "win": {
+        "target": "nsis"
     },
     "linux": {
-      "target": "Deb",
+      "target": "deb",
       "category": "Utility",
     }
   }
@@ -107,43 +111,61 @@ JSON_FRAMEWORK = {
 def getVersionDate():
     return datetime.today().strftime('%y.%m.%d')
 
-def generatePackageJson(project, ui_version, artifact_name, output_path="../electron/package.json", author="Michael Pesce <mpesce@lbl.gov>"):
-    
+def renameIcon(working_dir, project):
+    try:
+        icon_dir = os.path.join(working_dir,"../electron/idaes-flowsheet-processor-ui/frontend/public/icons")
+        src = f"{icon_dir}/{project.lower()}x512.png"
+        dst = f"{icon_dir}/512x512.png"
+        print(f"renaming {src} to {dst}")
+        os.rename(src, dst)
+    except Exception as e:
+        print(f"unable to rename icon: {e}")
+
+def generatePackageJson(project, ui_version, artifact_name, author, output_path="../electron/package.json"):
     package_json = JSON_FRAMEWORK.copy()
     package_json["version"] = ui_version
     package_json["author"] = author
+    package_json["email"] = author
     if project == "idaes":
         package_json["name"] = "idaes-flowsheet-processor-ui"
         package_json["build"]["productName"] = "IDAES-Flowsheet-Processor"
         package_json["build"]["appId"] = "com.electron.idaes-flowsheet-processor-ui"
-        icon = "build/idaes-logo.ico"
+        # icon = "build/idaes-logo.ico"
+        icon = "icons/idaesx512"
     elif project == "watertap":
         package_json["name"] = "watertap-flowsheet-processor-ui"
         package_json["build"]["productName"] = "WaterTAP-Flowsheet-Processor"
         package_json["build"]["appId"] = "com.electron.watertap-flowsheet-processor-ui"
-        icon = "build/nawi-logo.ico"
+        # icon = "build/nawi-logo.ico"
+        icon = "icons/watertapx512"
     elif project == "prommis":
         package_json["name"] = "prommis-flowsheet-processor-ui"
         package_json["build"]["productName"] = "PROMMIS-Flowsheet-Processor"
         package_json["build"]["appId"] = "com.electron.prommis-flowsheet-processor-ui"
-        icon = "build/prommis-logo.ico"
+        # icon = "build/prommis-logo.ico"
+        icon = "icons/prommisx512"
 
     package_json["build"]["mac"]["icon"] = icon
     package_json["build"]["win"]["icon"] = icon
     package_json["build"]["linux"]["icon"] = icon
 
     package_json["build"]["win"]["target"] = "nsis"
+    package_json["build"]["mac"]["target"] = "dmg"
+    package_json["build"]["linux"]["target"] = "deb"
 
     ## add artifact names with version
     package_json["build"]["nsis"]["artifactName"] = f"{artifact_name}_{ui_version}_win64.exe"
     package_json["build"]["win"]["artifactName"] = f"{artifact_name}_{ui_version}_win64.exe"
     package_json["build"]["mac"]["artifactName"] = f"{artifact_name}_{ui_version}_arm64.dmg"
     package_json["build"]["deb"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.deb"
+    package_json["build"]["linux"]["artifactName"] = f"{artifact_name}_{ui_version}_amd64.deb"
 
     working_dir = pathlib.Path(__file__).parent.resolve()
     package_json_path = os.path.join(working_dir,output_path)
     with open(package_json_path, "w") as f:
-        json.dump(package_json, f)
+        json.dump(package_json, f, indent=4)
+    
+    # renameIcon(working_dir=working_dir, project=project)
 
 def setEnvVariables(project, ui_version, project_version):
     working_dir = pathlib.Path(__file__).parent.resolve()
@@ -166,15 +188,21 @@ if __name__ == "__main__":
     parser.add_argument("-bv", "--build_version", help="Build version, typically in date format (yy.mm.dd). If not provided, will use current date.")
     parser.add_argument("-a", "--artifact_name", help="Artifact name. If not provided, will use provided project to create artifact name.")
     parser.add_argument("-pv", "--project_version", help="Project version, ie the version of WaterTAP, IDAES, or PROMMIS that is installed.")
+    parser.add_argument("-au", "--author", help="Author who created the build.")
     args = parser.parse_args()
     project = args.project
     ui_version = args.build_version
     artifact_name = args.artifact_name
     project_version = args.project_version
+    author = args.author
     if ui_version is None:
         ui_version = getVersionDate()
     if artifact_name is None:
         artifact_name = f"{project}-Flowsheet-Processor"
+    if author is None:
+        author = "unknown <unknown>"
+    if "<>" in author:
+        author = author.replace("<>", "<unknown@email.com>")
 
     valid_projects = ["watertap", "prommis", "idaes"]
     if project is not None:
@@ -190,5 +218,5 @@ if __name__ == "__main__":
             project_version = version(project)
         print(f"using project version: {project_version}")
 
-    generatePackageJson(project=project, ui_version=ui_version, artifact_name=artifact_name)
+    generatePackageJson(project=project, ui_version=ui_version, author=author, artifact_name=artifact_name)
     setEnvVariables(project=project, ui_version=ui_version, project_version=project_version)

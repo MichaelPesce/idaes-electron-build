@@ -1,4 +1,4 @@
-name: flowsheet-processor-env
+name: ifp-build-env
 channels:
   - conda-forge
   - nodefaults

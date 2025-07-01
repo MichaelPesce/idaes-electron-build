@@ -9,7 +9,7 @@ This repository is for building desktop versions of user interaces under the IDA
 The following steps assume that:
 
 1. `gh` is already installed and configured For installation instructions, see https://github.com/cli/cli.
-2. This repository (i.e. https://github.com/watertap-org/idaes-electron-build) has been cloned locally and the working directory is set to the root of the repository
+2. This repository (i.e. https://github.com/prommis/idaes-electron-build) has been cloned locally and the working directory is set to the root of the repository
 
 ### Run application dispatch for WaterTAP
 
@@ -53,7 +53,7 @@ These commands will initiate a windows deployment. For mac, use os-version=macos
   - description: Build artifact name
 - idaes-flowsheet-processor-ui-repo
   - type: string
-  - default: watertap-org/idaes-flowsheet-processor-ui
+  - default: prommis/idaes-flowsheet-processor-ui
   - description: IDAES Flowsheet Processor UI repository URL. Can be replaced by forks such as {github-user}/idaes-flowsheet-processor-ui
 - idaes-flowsheet-processor-ui-ref
   - type: string
@@ -70,7 +70,7 @@ These commands will initiate a windows deployment. For mac, use os-version=macos
 The following steps assume that:
 
 1. `conda` is already installed and configured
-2. This repository (i.e. https://github.com/watertap-org/idaes-electron-build) has been cloned locally and the working directory is set to the root of the repository
+2. This repository (i.e. https://github.com/prommis/idaes-electron-build) has been cloned locally and the working directory is set to the root of the repository
 
 ## Setup
 
@@ -112,7 +112,7 @@ python scripts/move_entrypoints.py
 
 ```console
 cd <idaes-electron-build>/electron
-git clone https://github.com/watertap-org/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
+git clone https://github.com/prommis/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
 ```
 
 ### 3. Install proper project (IDAES, WaterTAP, or PROMMIS)

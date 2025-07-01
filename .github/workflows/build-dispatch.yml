@@ -40,6 +40,22 @@ on:
         type: string
 
 jobs:
+  get-latest-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest release from another repo
+        id: get_release
+        run: |
+          latest_release=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/watertap-org/watertap/releases/latest \
+            | jq -r .tag_name)
+          echo "Latest release tag: $latest_release"
+          echo "release_tag=$latest_release" >> "$GITHUB_OUTPUT"
+
+      - name: Use the release tag
+        run: echo "The latest release tag is ${{ steps.get_release.outputs.release_tag }}"
+
   electron-build:
     uses: ./.github/workflows/electron-build.yml
     name: ${{ inputs.project }} Build

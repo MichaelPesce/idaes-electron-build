@@ -1,4 +1,4 @@
-name: Application Build
+name: Application Build Dispatch
 
 on:
   workflow_dispatch:
@@ -40,11 +40,15 @@ on:
         type: string
 
 jobs:
-  get-latest-release:
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      job-name: ${{ steps.generate-dynamic-inputs.outputs.job-name }}
+      os: ${{ steps.generate-dynamic-inputs.outputs.os }}
+      release-tag: ${{ steps.get-release.outputs.release_tag }}
     steps:
-      - name: Get latest release from another repo
-        id: get_release
+      - name: Get latest watertap release
+        id: get-release
         run: |
           latest_release=$(curl -s \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -54,11 +58,26 @@ jobs:
           echo "release_tag=$latest_release" >> "$GITHUB_OUTPUT"
 
       - name: Use the release tag
-        run: echo "The latest release tag is ${{ steps.get_release.outputs.release_tag }}"
+        run: echo "The latest release tag is ${{ steps.get-release.outputs.release_tag }}"
+
+      - name: Generate dynamic inputs
+        id: generate-dynamic-inputs
+        run: |
+          if [ "${{ inputs.os-version }}" == "windows-latest" ]; then
+            echo "job-name=Windows Build" >> $GITHUB_OUTPUT
+            echo "os=windows" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.os-version }}" == "ubuntu-latest" ]; then
+            echo "job-name=Linux Build" >> $GITHUB_OUTPUT
+            echo "os=linux" >> $GITHUB_OUTPUT
+          else
+            echo "job-name=Mac Build" >> $GITHUB_OUTPUT
+            echo "os=mac" >> $GITHUB_OUTPUT
+          fi
 
   electron-build:
+    needs: prepare
     uses: ./.github/workflows/electron-build.yml
-    name: ${{ inputs.project }} Build
+    name: ${{ needs.prepare.outputs.os }} ${{ inputs.project }}
     with:
       os-version: ${{ inputs.os-version }}
       project: ${{ inputs.project }}

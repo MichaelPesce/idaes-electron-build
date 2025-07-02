@@ -179,6 +179,9 @@ jobs:
       - name: Install numpy 2.2.6
         run: pip install numpy==2.2.6
 
+      - name: Install scipy 1.15.3
+        run: pip install scipy==1.15.3
+
       - name: Build Backend
         working-directory: ./pyinstaller
         run: pyinstaller -y --clean --distpath ../electron/py_dist main.spec

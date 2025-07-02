@@ -13,8 +13,8 @@ on:
         type: string
         default: watertap@git+https://github.com/watertap-org/watertap@main
       artifact-name:
-          type: string
-          default: ${{ inputs.project }}-Flowsheet-Processor
+        type: string
+        default: ${{ inputs.project }}-Flowsheet-Processor
       idaes-flowsheet-processor-ui-repo:
         type: string
         default: watertap-org/idaes-flowsheet-processor-ui
@@ -22,6 +22,8 @@ on:
         type: string
         default: main
       package-build-number:
+        type: string
+      os:
         type: string
     secrets:
       AZURE_KEY_VAULT_URI:
@@ -56,7 +58,7 @@ defaults:
 
 jobs:
   electron-build:
-    name: ${{ inputs.os-version }} build
+    name: ${{ inputs.os-version }}
     runs-on: ${{ inputs.os-version }}
     steps:
       - uses: actions/checkout@v4
@@ -167,6 +169,15 @@ jobs:
 
       - name: Get idaes extensions
         run: idaes get-extensions
+
+      - name: DEBUG - pip freeze
+        run: pip freeze
+
+      - name: Install numpy 2.2.6
+        run: pip install numpy==2.2.6
+
+      - name: Install scipy 1.15.3
+        run: pip install scipy==1.15.3
 
       - name: Transfer Entry points
         working-directory: ./scripts

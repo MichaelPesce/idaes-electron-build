@@ -100,8 +100,8 @@ datas.append(("./Lorem ipsum.txt", "jaraco/text"))
 if project == "watertap":
     datas.append((src_name, "watertap/core"))
 
-# print(f"datas: \n{datas}")
-# print(f"hiddenimports: \n{hiddenimports}")
+print(f"datas: \n{datas}")
+print(f"hiddenimports: \n{hiddenimports}")
 
 pyomo_imports = [
     "networkx",

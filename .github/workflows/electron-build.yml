@@ -3,9 +3,6 @@ run-name: App Build For ${{ inputs.project }}
 on:
   workflow_call:
     inputs:
-      os:
-        type: string
-        default: windows
       os-version:
         type: string
         default: windows-latest
@@ -16,8 +13,8 @@ on:
         type: string
         default: watertap@git+https://github.com/watertap-org/watertap@main
       artifact-name:
-          type: string
-          default: ${{ inputs.project }}-Flowsheet-Processor
+        type: string
+        default: ${{ inputs.project }}-Flowsheet-Processor
       idaes-flowsheet-processor-ui-repo:
         type: string
         default: watertap-org/idaes-flowsheet-processor-ui
@@ -25,6 +22,8 @@ on:
         type: string
         default: main
       package-build-number:
+        type: string
+      os:
         type: string
     secrets:
       AZURE_KEY_VAULT_URI:

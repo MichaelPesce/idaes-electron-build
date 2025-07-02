@@ -3,6 +3,9 @@ run-name: App Build For ${{ inputs.project }}
 on:
   workflow_call:
     inputs:
+      os:
+        type: string
+        default: windows
       os-version:
         type: string
         default: windows-latest
@@ -56,7 +59,7 @@ defaults:
 
 jobs:
   electron-build:
-    name: ${{ inputs.os-version }} build
+    name: ${{ inputs.os }}
     runs-on: ${{ inputs.os-version }}
     steps:
       - uses: actions/checkout@v4
@@ -168,11 +171,6 @@ jobs:
       - name: Get idaes extensions
         run: idaes get-extensions
 
-      - name: Transfer Entry points
-        working-directory: ./scripts
-        run: |
-          python move_entrypoints.py -p ${{ inputs.project }}
-
       - name: DEBUG - pip freeze
         run: pip freeze
 
@@ -181,6 +179,11 @@ jobs:
 
       - name: Install scipy 1.15.3
         run: pip install scipy==1.15.3
+
+      - name: Transfer Entry points
+        working-directory: ./scripts
+        run: |
+          python move_entrypoints.py -p ${{ inputs.project }}
 
       - name: Build Backend
         working-directory: ./pyinstaller

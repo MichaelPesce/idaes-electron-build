@@ -77,8 +77,9 @@ jobs:
   electron-build:
     needs: prepare
     uses: ./.github/workflows/electron-build.yml
-    name: ${{ needs.prepare.outputs.os }} ${{ inputs.project }}
+    name: ${{ inputs.project }}
     with:
+      os: ${{ needs.prepare.outputs.os }} 
       os-version: ${{ inputs.os-version }}
       project: ${{ inputs.project }}
       pip-install-target: ${{ inputs.pip-install-target }}

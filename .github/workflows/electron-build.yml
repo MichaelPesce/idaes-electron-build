@@ -58,7 +58,7 @@ defaults:
 
 jobs:
   electron-build:
-    name: ${{ inputs.os }}
+    name: ${{ inputs.os-version }}
     runs-on: ${{ inputs.os-version }}
     steps:
       - uses: actions/checkout@v4

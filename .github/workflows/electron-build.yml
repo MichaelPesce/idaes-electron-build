@@ -17,7 +17,7 @@ on:
         default: ${{ inputs.project }}-Flowsheet-Processor
       idaes-flowsheet-processor-ui-repo:
         type: string
-        default: watertap-org/idaes-flowsheet-processor-ui
+        default: prommis/idaes-flowsheet-processor-ui
       idaes-flowsheet-processor-ui-ref:
         type: string
         default: main

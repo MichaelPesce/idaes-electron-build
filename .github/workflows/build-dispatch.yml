@@ -30,7 +30,7 @@ on:
       idaes-flowsheet-processor-ui-repo:
         description: "IDAES Flowsheet Processor UI repository URL"
         type: string
-        default: watertap-org/idaes-flowsheet-processor-ui
+        default: prommis/idaes-flowsheet-processor-ui
       idaes-flowsheet-processor-ui-ref:
         description: "Branch or tag for the IDAES Flowsheet Processor UI repository"
         type: string

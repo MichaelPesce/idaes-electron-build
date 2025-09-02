@@ -38,6 +38,9 @@ on:
       package-build-number:
         description: "Package build number"
         type: string
+      project-version:
+        description: "Python project version ie. 1.5.0. If not provided, version will be detected using Python."
+        type: string
 
 jobs:
   prepare:

@@ -30,13 +30,16 @@ on:
       idaes-flowsheet-processor-ui-repo:
         description: "IDAES Flowsheet Processor UI repository URL"
         type: string
-        default: watertap-org/idaes-flowsheet-processor-ui
+        default: prommis/idaes-flowsheet-processor-ui
       idaes-flowsheet-processor-ui-ref:
         description: "Branch or tag for the IDAES Flowsheet Processor UI repository"
         type: string
         default: main
       package-build-number:
         description: "Package build number"
+        type: string
+      project-version:
+        description: "Python project version ie. 1.5.0. If not provided, version will be detected using Python."
         type: string
 
 jobs:
@@ -87,4 +90,5 @@ jobs:
       idaes-flowsheet-processor-ui-repo: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
       idaes-flowsheet-processor-ui-ref: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
       package-build-number: ${{ inputs.package-build-number }}
+      project-version: ${{ inputs.project-version }}
     secrets: inherit

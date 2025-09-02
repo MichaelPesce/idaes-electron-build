@@ -17,11 +17,13 @@ on:
         default: ${{ inputs.project }}-Flowsheet-Processor
       idaes-flowsheet-processor-ui-repo:
         type: string
-        default: watertap-org/idaes-flowsheet-processor-ui
+        default: prommis/idaes-flowsheet-processor-ui
       idaes-flowsheet-processor-ui-ref:
         type: string
         default: main
       package-build-number:
+        type: string
+      project-version:
         type: string
       os:
         type: string
@@ -157,7 +159,19 @@ jobs:
 
         ## creates package.json and .env files
       - name: Set configuration files
-        run: python scripts/set_configuration.py -p ${{ inputs.project }} -bv ${{ steps.generate-build-number.outputs.build-number }} -a ${{ inputs.artifact-name }} -au "${{ steps.get-author.outputs.AUTHOR }}"
+        run: |
+          cmd="python scripts/set_configuration.py \
+            -p '${{ inputs.project }}' \
+            -bv '${{ steps.generate-build-number.outputs.build-number }}' \
+            -a '${{ inputs.artifact-name }}' \
+            -au '${{ steps.get-author.outputs.AUTHOR }}'"
+
+          if [ -n "${{ inputs.project-version }}" ]; then
+            cmd="$cmd -pv '${{ inputs.project-version }}'"
+          fi
+
+          echo "Running: $cmd"
+          eval "$cmd"
 
       - name: Install Electron JS dependencies
         working-directory: ./electron

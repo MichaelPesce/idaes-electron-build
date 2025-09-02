@@ -90,4 +90,5 @@ jobs:
       idaes-flowsheet-processor-ui-repo: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
       idaes-flowsheet-processor-ui-ref: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
       package-build-number: ${{ inputs.package-build-number }}
+      project-version: ${{ inputs.project-version }}
     secrets: inherit

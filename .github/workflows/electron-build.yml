@@ -28,8 +28,8 @@ on:
       os:
         type: string
       python-version:
-        type: string
-        default: "3.12"
+        type: number
+        default: 3.12
     secrets:
       AZURE_KEY_VAULT_URI:
         required: false
@@ -71,7 +71,7 @@ jobs:
         with:
           environment-file: environment.yml
           python-version: ${{inputs.python-version}}
-          activate-environment: flowsheet-processor-env
+          activate-environment: ifp-build-env
           miniforge-version: latest
 
       - name: Get email of workflow initiator

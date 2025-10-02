@@ -28,8 +28,8 @@ on:
       os:
         type: string
       python-version:
-        type: number
-        default: 3.12
+        type: string
+        default: "3.12"
     secrets:
       AZURE_KEY_VAULT_URI:
         required: false

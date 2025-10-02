@@ -10,6 +10,7 @@ jobs:
         matrix:
             project: [watertap, prommis, idaes]
             os-version: [macos-latest, windows-latest]
+            python-version: [3.12, 3.13]
             include: 
                 - project: watertap
                   pip-install-target: watertap@git+https://github.com/watertap-org/watertap@1.2.0rc0
@@ -30,4 +31,5 @@ jobs:
         idaes-flowsheet-processor-ui-repo: watertap-org/idaes-flowsheet-processor-ui
         idaes-flowsheet-processor-ui-ref: main
         os-version: ${{ matrix.os-version }}
+        python-version: ${{matrix.python-version}}
     secrets: inherit

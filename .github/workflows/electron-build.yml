@@ -27,6 +27,9 @@ on:
         type: string
       os:
         type: string
+      python-version:
+        type: number
+        default: 3.12
     secrets:
       AZURE_KEY_VAULT_URI:
         required: false
@@ -67,6 +70,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           environment-file: environment.yml
+          python-version: ${{inputs.python-version}}
           activate-environment: flowsheet-processor-env
           miniforge-version: latest
 

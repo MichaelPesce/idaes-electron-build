@@ -10,7 +10,7 @@ jobs:
         matrix:
             project: [watertap, prommis, idaes]
             os-version: [macos-latest, windows-latest]
-            python-version: [3.12, 3.13]
+            python-version: ["3.12", "3.13"]
             include: 
                 - project: watertap
                   pip-install-target: watertap@git+https://github.com/watertap-org/watertap@1.2.0rc0

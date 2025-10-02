@@ -63,7 +63,7 @@ defaults:
 
 jobs:
   electron-build:
-    name: ${{ inputs.os-version }}
+    name: ${{ inputs.os-version }}/Python${{inputs.python-version}}
     runs-on: ${{ inputs.os-version }}
     steps:
       - uses: actions/checkout@v4

@@ -27,7 +27,7 @@ jobs:
     with:
         project: ${{ matrix.project }}
         pip-install-target: ${{ matrix.pip-install-target }}
-        artifact-name: ${{ matrix.artifact-name }}/${{ matrix.python-version }}
+        artifact-name: ${{ matrix.artifact-name }}-${{ matrix.python-version }}
         idaes-flowsheet-processor-ui-repo: watertap-org/idaes-flowsheet-processor-ui
         idaes-flowsheet-processor-ui-ref: main
         os-version: ${{ matrix.os-version }}

@@ -67,12 +67,24 @@ jobs:
     runs-on: ${{ inputs.os-version }}
     steps:
       - uses: actions/checkout@v4
+      # - uses: conda-incubator/setup-miniconda@v3
+      #   with:
+      #     environment-file: environment.yml
+      #     python-version: ${{ inputs.python-version }}
+      #     activate-environment: ifp-build-env
+      #     miniforge-version: latest
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          environment-file: environment.yml
-          python: ${{ inputs.python-version }}
-          activate-environment: ifp-build-env
+          python-version: ${{ inputs.python-version }}
           miniforge-version: latest
+
+      - name: Install conda dependencies
+        run: |
+          conda config --add channels conda-forge
+          conda config --add channels nodefaults
+          conda create --name build-env python=${{ inputs.python-version }} pip nodejs=20.9.0 -y
+          conda activate ifp-build-env
+          pip install -r pyinstaller/requirements.txt
 
       - name: Get email of workflow initiator
         id: get-author

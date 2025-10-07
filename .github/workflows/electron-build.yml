@@ -70,7 +70,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           environment-file: environment.yml
-          python-version: ${{ inputs.python-version }}
+          python: ${{ inputs.python-version }}
           activate-environment: ifp-build-env
           miniforge-version: latest
 

@@ -77,13 +77,12 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           miniforge-version: latest
+          activate-environment: ifp-build-env
+          channels: conda-forge,nodefaults
 
       - name: Install conda dependencies
         run: |
-          conda config --add channels conda-forge
-          conda config --add channels nodefaults
-          conda create --name build-env python=${{ inputs.python-version }} pip nodejs=20.9.0 -y
-          conda activate ifp-build-env
+          conda install -c conda-forge nodejs=20.9.0 -y
           pip install -r pyinstaller/requirements.txt
 
       - name: Get email of workflow initiator

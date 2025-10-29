@@ -76,10 +76,10 @@ The following steps assume that:
 
 ### 1. Creating the Conda environment
 
-Run the following command to create and activate a new Conda environment named `flowsheet-processor-env`:
+Run the following command to create and activate a new Conda environment named `ifp-build-env`:
 
 ```sh
-conda env create --file environment.yml && conda activate flowsheet-processor-env
+conda env create --file environment.yml && conda activate ifp-build-env
 ```
 
 This will install the correct runtime versions of both the backend (Python) and frontend (NodeJS) portions of the UI, as well as the backend (Python) dependencies.
@@ -99,7 +99,7 @@ This will create a package.json file environment files that are required to crea
 The following steps assume that:
 
 1. `conda` is already installed and configured
-2. `flowsheet-processor-env` Conda environment is active
+2. `ifp-build-env` Conda environment is active
 
 ### 1. Transfer Entry points
 

@@ -1,3 +1,6 @@
 importlib_resources
 python-dotenv
-pyinstaller>=5.3,<=6.3
+# For Python < 3.13
+pyinstaller>=5.3,<=6.3; python_version < "3.13"
+# For Python >= 3.13
+pyinstaller>=6.10; python_version >= "3.13"

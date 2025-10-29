@@ -76,43 +76,25 @@ The following steps assume that:
 
 ### 1. Creating the Conda environment
 
-Run the following command to create and activate a new Conda environment named `flowsheet-processor-env`:
+Run the following command to create and activate a new Conda environment named `ifp-build-env`:
 
 ```sh
-conda env create --file environment.yml && conda activate flowsheet-processor-env
+conda env create --file environment.yml && conda activate ifp-build-env
 ```
 
 This will install the correct runtime versions of both the backend (Python) and frontend (NodeJS) portions of the UI, as well as the backend (Python) dependencies.
 
-### 2. Generate package.json
-
-From the root directory, run the following python file:
-
-```sh
-python scripts/set_configuration.py -p <project-you-wish-to-build>
-```
-
-This will create a package.json file environment files that are required to create the Electron package. Project options are watertap, prommis, and idaes.
-
-# Building production Electron app
-
-The following steps assume that:
-
-1. `conda` is already installed and configured
-2. `flowsheet-processor-env` Conda environment is active
-
-### 1. Transfer Entry points
-
-```sh
-cd <idaes-electron-build>
-python scripts/move_entrypoints.py
-```
-
-### 2. Install IDAES Flowsheet Processor Locally
+### 2. Install IDAES Flowsheet Processor Locally and run NPM install
 
 ```console
 cd <idaes-electron-build>/electron
 git clone https://github.com/prommis/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
+```
+
+Then install NPM
+```console
+cd <idaes-electron-build>/electron/idaes-flowsheet-processor-ui
+npm --prefix frontend clean-install
 ```
 
 ### 3. Install proper project (IDAES, WaterTAP, or PROMMIS)
@@ -121,7 +103,40 @@ git clone https://github.com/prommis/idaes-flowsheet-processor-ui.git && cd idae
 pip install <project>
 ```
 
-### 4. Create build distribution
+### 4. Generate package.json
+
+From the root directory, run the following python file:
+
+```sh
+cd <idaes-electron-build>
+python scripts/set_configuration.py -p <project-you-wish-to-build>
+```
+if your project requries additional modules, that are not part of standard watertap/promiss/idaes then add them via am option 
+```sh
+cd <idaes-electron-build>
+python scripts/set_configuration.py -p <project-you-wish-to-build> -am <comma separated list of additonal modules> 
+```
+
+example (not, do not include spaces unless they are part of package name!)
+```sh
+cd <idaes-electron-build>
+python scripts/set_configuration.py -p watertap -am my_custom_package_1,my_custom_package_2
+```
+
+### 5. Transfer Entry points
+
+```sh
+cd <idaes-electron-build>
+python scripts/move_entrypoints.py
+```
+
+### 6. Install npm
+```console
+cd electron
+npm install
+```
+
+### 5. Create build distribution
 
 ### Windows:
 #### Requirements: 

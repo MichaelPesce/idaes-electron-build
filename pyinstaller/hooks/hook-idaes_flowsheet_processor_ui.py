@@ -10,9 +10,18 @@ imports = set()
 datas = []
 
 project = os.getenv("project")
+additional_modules = os.getenv("additional_modules", None)
 print(f"project is {project}")
-
-packages = ["pyomo", "scipy", project]
+default_packages = ["pyomo", "scipy"]
+if additional_modules is not None:
+    if "," in additional_modules:
+        additional_modules_list = additional_modules.split(",")
+    else:
+        additional_modules_list = [additional_modules]
+    default_packages.extend(additional_modules_list)
+default_packages.append(project)
+packages = default_packages
+print("packages to scan:", packages)
 for package in packages:
     pkg = importlib.import_module(package)
     try:

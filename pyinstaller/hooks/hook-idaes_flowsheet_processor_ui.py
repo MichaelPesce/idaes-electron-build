@@ -103,6 +103,22 @@ for package in packages:
             print(f"Import of file '{yaml_file}' failed: {err}")
             continue
 
+    # add all json files to pyinstaller data
+    for json_file in pkg_path.glob("**/*.json"):
+        file_name = "/" + json_file.as_posix().split("/")[-1]
+        # print(file_name)
+        if skip_expr.search(str(json_file)):
+            continue
+        relative_path = json_file.relative_to(pkg_path)
+        dotted_name = relative_path.as_posix()
+        src_name = f"{base_folder}/" + package + "/" + dotted_name
+        dst_name = package + "/" + dotted_name.replace(file_name, "")
+        try:
+            datas.append((src_name, dst_name))
+        except Exception as err:  # assume the import could do bad things
+            print(f"Import of file '{json_file}' failed: {err}")
+            continue
+
 hiddenimports = list(imports)
 # add lorem ipsum.txt for jaraco
 datas.append(("./Lorem ipsum.txt", "jaraco/text"))

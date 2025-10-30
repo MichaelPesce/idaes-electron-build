@@ -91,10 +91,13 @@ cd <idaes-electron-build>/electron
 git clone https://github.com/prommis/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
 ```
 
-Then install NPM
+### 2.b Install NPM
+We should already be in flowsheet processor dir, so first install frontend NPM and then go and install main electron npm
 ```console
 cd <idaes-electron-build>/electron/idaes-flowsheet-processor-ui
 npm --prefix frontend clean-install
+cd <idaes-electron-build>/electron
+npm clean-install
 ```
 
 ### 3. Install proper project (IDAES, WaterTAP, or PROMMIS)
@@ -103,6 +106,14 @@ npm --prefix frontend clean-install
 pip install <project>
 ```
 
+### 3.b Install supported versions of Numpy and Scipy
+Not all versions of Numpy and Scipy will work with pyinstaller, and thus we some time have to specify a unique version. The compatibility will be a function of   operating system, version of watertap and pyinstaller, in many cases this might not be required. To check, look in .github\workflows\electron-build.yaml file to see if 
+we are using any specific versions of Numpy or Scipy during electron-build workflow. As of writing this guide we use numpy 2.2.6, and scipy 1.15.3 with WaterTAP 1.14.0:
+
+```consol
+pip install numpy==2.2.6
+pip install scipy==1.15.3
+```
 ### 4. Generate package.json
 
 From the root directory, run the following python file:
@@ -130,13 +141,7 @@ cd <idaes-electron-build>
 python scripts/move_entrypoints.py
 ```
 
-### 6. Install npm
-```console
-cd electron
-npm install
-```
-
-### 5. Create build distribution
+### 6. Create build distribution
 
 ### Windows:
 #### Requirements: 

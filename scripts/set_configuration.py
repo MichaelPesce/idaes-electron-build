@@ -170,6 +170,9 @@ def setEnvVariables(project, ui_version, project_version, additional_modules="")
     with open(hook_env_path, "w") as f:
         f.write(f"project={project}\n")
         if additional_modules != "":
+            print(
+                f"Adding additional modules to pyinstaller hook env file {additional_modules}"
+            )
             f.write(f"additional_modules={additional_modules}\n")
 
     with open(electron_env_path, "w") as f:

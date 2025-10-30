@@ -93,6 +93,7 @@ git clone https://github.com/prommis/idaes-flowsheet-processor-ui.git && cd idae
 
 ### 2.b Install NPM
 We should already be in flowsheet processor dir, so first install frontend NPM and then go and install main electron npm
+
 ```console
 cd <idaes-electron-build>/electron/idaes-flowsheet-processor-ui
 npm --prefix frontend clean-install

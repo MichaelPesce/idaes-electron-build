@@ -159,8 +159,7 @@ python scripts/move_entrypoints.py -p watertap -ue "custom_flowsheet_a = custom_
 ```
 
 ### 6. Install NPM
-We should already be in flowsheet processor dir, so first install frontend NPM and then go and install main electron npm
-
+Install NPM for build and front end:
 ```console
 cd <idaes-electron-build>/electron
 npm install

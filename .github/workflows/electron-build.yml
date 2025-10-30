@@ -27,6 +27,9 @@ on:
         type: string
       os:
         type: string
+      python-version:
+        type: number
+        default: 3.12
     secrets:
       AZURE_KEY_VAULT_URI:
         required: false
@@ -60,15 +63,27 @@ defaults:
 
 jobs:
   electron-build:
-    name: ${{ inputs.os-version }}
+    name: ${{ inputs.os-version }}/Python${{inputs.python-version}}
     runs-on: ${{ inputs.os-version }}
     steps:
       - uses: actions/checkout@v4
+      # - uses: conda-incubator/setup-miniconda@v3
+      #   with:
+      #     environment-file: environment.yml
+      #     python-version: ${{ inputs.python-version }}
+      #     activate-environment: ifp-build-env
+      #     miniforge-version: latest
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          environment-file: environment.yml
-          activate-environment: flowsheet-processor-env
+          python-version: ${{ inputs.python-version }}
           miniforge-version: latest
+          activate-environment: ifp-build-env
+          channels: conda-forge,nodefaults
+
+      - name: Install conda dependencies
+        run: |
+          conda install -c conda-forge nodejs=20.9.0 -y
+          pip install -r pyinstaller/requirements.txt
 
       - name: Get email of workflow initiator
         id: get-author
@@ -184,19 +199,19 @@ jobs:
       - name: Get idaes extensions
         run: idaes get-extensions
 
-      - name: DEBUG - pip freeze
-        run: pip freeze
+      # - name: Install numpy 2.2.6
+      #   run: pip install numpy==2.2.6
 
-      - name: Install numpy 2.2.6
-        run: pip install numpy==2.2.6
-
-      - name: Install scipy 1.15.3
-        run: pip install scipy==1.15.3
+      # - name: Install scipy 1.15.3
+      #   run: pip install scipy==1.15.3
 
       - name: Transfer Entry points
         working-directory: ./scripts
         run: |
           python move_entrypoints.py -p ${{ inputs.project }}
+
+      - name: DEBUG - pip freeze
+        run: pip freeze
 
       - name: Build Backend
         working-directory: ./pyinstaller
@@ -246,5 +261,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-            name: ${{ inputs.project }}-${{ steps.os-specific-values.outputs.os }}-dist
+            name: ${{ inputs.project }}-${{ steps.os-specific-values.outputs.os }}-${{ inputs.python-version }}-dist
             path: ${{ steps.artifact-path.outputs.path }}

@@ -10,9 +10,10 @@ jobs:
         matrix:
             project: [watertap, prommis, idaes]
             os-version: [macos-latest, windows-latest]
+            python-version: [3.12, 3.13]
             include: 
                 - project: watertap
-                  pip-install-target: watertap@git+https://github.com/watertap-org/watertap@1.2.0rc0
+                  pip-install-target: watertap@git+https://github.com/watertap-org/watertap@main
                   artifact-name: WaterTAP-Flowsheet-Processor
                 - project: prommis
                   pip-install-target: prommis@git+https://github.com/prommis/prommis@0.6.0rc0
@@ -26,8 +27,9 @@ jobs:
     with:
         project: ${{ matrix.project }}
         pip-install-target: ${{ matrix.pip-install-target }}
-        artifact-name: ${{ matrix.artifact-name }}
+        artifact-name: ${{ matrix.artifact-name }}-${{ matrix.python-version }}
         idaes-flowsheet-processor-ui-repo: watertap-org/idaes-flowsheet-processor-ui
         idaes-flowsheet-processor-ui-ref: main
         os-version: ${{ matrix.os-version }}
+        python-version: ${{matrix.python-version}}
     secrets: inherit

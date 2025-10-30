@@ -84,22 +84,25 @@ conda env create --file environment.yml && conda activate ifp-build-env
 
 This will install the correct runtime versions of both the backend (Python) and frontend (NodeJS) portions of the UI, as well as the backend (Python) dependencies.
 
-### 2. Install IDAES Flowsheet Processor Locally and run NPM install
+### 2. Install IDAES Flowsheet Processor Locally
 
 ```console
 cd <idaes-electron-build>/electron
 git clone https://github.com/prommis/idaes-flowsheet-processor-ui.git && cd idaes-flowsheet-processor-ui && pip install --progress-bar off .
 ```
 
-### 3. Install proper project (IDAES, WaterTAP, or PROMMIS)
+### 3.a Install proper project (IDAES, WaterTAP, or PROMMIS)
 
 ```console
 pip install <project>
 ```
 
-### 3.b Install supported versions of Numpy and Scipy
-Not all versions of Numpy and Scipy will work with pyinstaller, and thus we some time have to specify a unique version. The compatibility will be a function of   operating system, version of watertap and pyinstaller, in many cases this might not be required. To check, look in .github\workflows\electron-build.yaml file to see if 
-we are using any specific versions of Numpy or Scipy during electron-build workflow. As of writing this guide we use numpy 2.2.6, and scipy 1.15.3 with WaterTAP 1.14.0:
+### 3.b Install any additional packages (Optional)
+Install any other required packages via pip now. 
+
+### 3.c Install supported versions of Numpy and Scipy (Optional)
+Not all versions of Numpy and Scipy will work with pyinstaller, and thus we some time have to specify a unique version. The compatibility will be a function of operating system, version of watertap and pyinstaller, in many cases this might not be required. To check, look in .github\workflows\electron-build.yaml file to see if 
+we are using any specific versions of Numpy or Scipy during electron-build workflow. The writer of this guide foudn he had to use numpy 2.2.6, and scipy 1.15.3 with WaterTAP 1.15dev0:
 
 ```consol
 pip install numpy==2.2.6
@@ -115,26 +118,47 @@ From the root directory, run the following python file:
 cd <idaes-electron-build>
 python scripts/set_configuration.py -p <project-you-wish-to-build>
 ```
-if your project requries additional modules, that are not part of standard watertap/promiss/idaes then add them via am option 
+if your project requires additional modules, that are not part of standard watertap/promiss/idaes then add them via -am option 
+
 ```sh
 cd <idaes-electron-build>
 python scripts/set_configuration.py -p <project-you-wish-to-build> -am <comma separated list of additonal modules> 
 ```
 
-example (not, do not include spaces unless they are part of package name!)
+example (note, do not include spaces unless they are part of package name!)\
+
 ```sh
 cd <idaes-electron-build>
 python scripts/set_configuration.py -p watertap -am my_custom_package_1,my_custom_package_2
 ```
 
-### 6. Transfer Entry points
+### 5. Transfer Entry points
 
+If your primary project has your entery points arleady defined that this command will work by default, just specify the project (default is WaterTAP)
 ```sh
 cd <idaes-electron-build>
-python scripts/move_entrypoints.py
+python scripts/move_entrypoints.py -p watertap
 ```
 
-### 5 Install NPM
+Otherwise you can provide entery points to add to existing, or to replace existing useing -ue command and -oe to specify if you want to overwite (True) or append (False, default)
+```sh
+cd <idaes-electron-build>
+python scripts/move_entrypoints.py -p watertap -ue "custom_flowsheet = custom_module.flowsheets.costom_flowsheet.ui" 
+```
+
+This will replace default watertap flowsheets uis with your custom flowsheet
+```sh
+cd <idaes-electron-build>
+python scripts/move_entrypoints.py -p watertap -ue "custom_flowsheet = custom_module.flowsheets.costom_flowsheet.ui" -oe True 
+```
+
+To specify more then one flowsheet, simply provide a comma deliminated list (e.g.)
+```sh
+cd <idaes-electron-build>
+python scripts/move_entrypoints.py -p watertap -ue "custom_flowsheet_a = custom_module.flowsheets.costom_flowsheet_a_._ui,custom_flowsheet_b = custom_module.flowsheets.costom_flowsheet_b_ui" -oe True 
+```
+
+### 6. Install NPM
 We should already be in flowsheet processor dir, so first install frontend NPM and then go and install main electron npm
 
 ```console
@@ -168,7 +192,6 @@ npm run dist:win
 cd <idaes-electron-build>/electron
 npm run dist:mac
 ```
-
 
 ### 8. Testing your build
 The build will be located inside the <idaes-electron-build>/electron/dist

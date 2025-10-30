@@ -11,7 +11,8 @@ from pathlib import Path
 
 ENTRYPOINTS_PACKAGE = "numpy"
 
-def update_entry_points(project):
+
+def update_entry_points(project, user_entrypoints=None, overwrite_entrypoints=False):
 
     ## temporarily use workarounds
     if project == "prommis":
@@ -29,24 +30,16 @@ def update_entry_points(project):
     try:
         if sys.platform == "darwin":
             print("darwin")
-            entrypoints_src_path = (
-                f"{conda_prefix}/lib/python*/site-packages/{conda_package_name}-*info/entry_points.txt"
-            )
+            entrypoints_src_path = f"{conda_prefix}/lib/python*/site-packages/{conda_package_name}-*info/entry_points.txt"
             entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
         elif sys.platform == "linux":
             print("linux")
-            entrypoints_src_path = (
-                f"{conda_prefix}/lib/python*/site-packages/{conda_package_name}-*info/entry_points.txt"
-            )
+            entrypoints_src_path = f"{conda_prefix}/lib/python*/site-packages/{conda_package_name}-*info/entry_points.txt"
             entrypoints_dst_path = f"{conda_prefix}/lib/python*/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
         else:
             # print("windows")
-            entrypoints_src_path = (
-                f"{conda_prefix}/lib/site-packages/{conda_package_name}-*info/entry_points.txt"
-            )
-            entrypoints_dst_path = (
-                f"{conda_prefix}/lib/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
-            )
+            entrypoints_src_path = f"{conda_prefix}/lib/site-packages/{conda_package_name}-*info/entry_points.txt"
+            entrypoints_dst_path = f"{conda_prefix}/lib/site-packages/{ENTRYPOINTS_PACKAGE}-*info/entry_points.txt"
     except Exception as e:
         print(f"unable to get entry points src/dst: {e}")
 
@@ -55,7 +48,9 @@ def update_entry_points(project):
     entrypoints_src_glob = glob.glob(entrypoints_src_path)
     entrypoints_dst_glob = glob.glob(entrypoints_dst_path)
 
-    print(f"entrypoints_src_glob: {entrypoints_src_glob}\nentrypoints_dst_glob: {entrypoints_dst_glob}")
+    print(
+        f"entrypoints_src_glob: {entrypoints_src_glob}\nentrypoints_dst_glob: {entrypoints_dst_glob}"
+    )
 
     entrypoints_src = entrypoints_src_glob[0]
     entrypoints_dst = entrypoints_dst_glob[0]
@@ -68,7 +63,9 @@ def update_entry_points(project):
         for line in f:
             if f"[{entry_points_project_name}.flowsheets]" in line:
                 start_getting_entries = True
-            elif start_getting_entries == True and ("]" in line or line == None or line == "\n"):
+            elif start_getting_entries == True and (
+                "]" in line or line == None or line == "\n"
+            ):
                 print(f"reached end of entry points, breaking")
                 break
             elif start_getting_entries:
@@ -77,7 +74,14 @@ def update_entry_points(project):
                     entry_points.append(entry)
                 else:
                     print(f"line is none, breaking")
-
+    if user_entrypoints is not None:
+        if overwrite_entrypoints:
+            entry_points = []
+        if "," in user_entrypoints:
+            entry_points.extend(user_entrypoints.split(","))
+        else:
+            entry_points.append(user_entrypoints)
+    print(f"entry_points: {entry_points}")
     ## if entry points for this project exist, remove current set of entry points
     entrypoints_dst_str = ""
     found_entrypoints = False
@@ -90,17 +94,17 @@ def update_entry_points(project):
             elif found_entrypoints:
                 entry = line.replace("\n", "")
             else:
-                entrypoints_dst_str+=line
+                entrypoints_dst_str += line
 
     ## remove any trailing new lines
     while entrypoints_dst_str[-1] == "\n":
         entrypoints_dst_str = entrypoints_dst_str[0:-1]
 
     ## add in entrypoints from the list
-    entrypoints_dst_str+=f"\n\n[{entry_points_project_name}.flowsheets]"
+    entrypoints_dst_str += f"\n\n[{entry_points_project_name}.flowsheets]"
     for each in entry_points:
-        entrypoints_dst_str+=f"\n{each}"
-
+        entrypoints_dst_str += f"\n{each}"
+    print(f"entry_points: {entrypoints_dst_str}")
     ## write this string to the dst path
     with open(entrypoints_dst, "w") as f:
         f.write(entrypoints_dst_str)
@@ -108,7 +112,23 @@ def update_entry_points(project):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--project", help="Project to search for entry points. If not provided, default is WaterTAP.")
+    parser.add_argument(
+        "-p",
+        "--project",
+        help="Project to search for entry points. If not provided, default is WaterTAP.",
+    )
+    parser.add_argument(
+        "-ue",
+        "--user_entrypoints",
+        default=None,
+        help="Provide a comma delimited list of user entrypoints to add to the entrypoints file.",
+    )
+    parser.add_argument(
+        "-oe",
+        "--overwrite_entrypoints",
+        default=False,
+        help="Specify if user_entrypoints should overwrite default entry points in project file (Default: False)",
+    )
     args = parser.parse_args()
     project = args.project
     if project is None:
@@ -117,5 +137,4 @@ if __name__ == "__main__":
         project = "idaes"
     else:
         project = project.lower()
-    update_entry_points(project)
-    
+    update_entry_points(project, args.user_entrypoints, args.overwrite_entrypoints)

@@ -199,19 +199,19 @@ jobs:
       - name: Get idaes extensions
         run: idaes get-extensions
 
-      - name: DEBUG - pip freeze
-        run: pip freeze
+      # - name: Install numpy 2.2.6
+      #   run: pip install numpy==2.2.6
 
-      - name: Install numpy 2.2.6
-        run: pip install numpy==2.2.6
-
-      - name: Install scipy 1.15.3
-        run: pip install scipy==1.15.3
+      # - name: Install scipy 1.15.3
+      #   run: pip install scipy==1.15.3
 
       - name: Transfer Entry points
         working-directory: ./scripts
         run: |
           python move_entrypoints.py -p ${{ inputs.project }}
+
+      - name: DEBUG - pip freeze
+        run: pip freeze
 
       - name: Build Backend
         working-directory: ./pyinstaller

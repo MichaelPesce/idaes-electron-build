@@ -168,3 +168,49 @@ npm run dist:win
 cd <idaes-electron-build>/electron
 npm run dist:mac
 ```
+
+
+### 8. Testing your build
+The build will be located inside the <idaes-electron-build>/electron/dist
+
+In the folder there will be an installer file, and a folder with 'upacked' install.
+
+### 8.1 Testing backend build on windows 
+
+The most common issue with doing a new custom build is failure to include all packages or build the backend, one can test if the backend is build correctly and also get a clear trace error by finding the py_dist folder in electron. 
+Go to:
+``` 
+<idaes-electron-build>/electron/py_dist/main
+```
+
+In there you will find a main.exe, execute inside a CMD so you can capture any errors:
+```consol
+main.exe
+```
+
+If all things are good it should show that your backend is loading and you should see that the application is started up, final messages should be something like this.
+```
+INFO:     Started server process [48008]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+```
+
+### 8.2 Common issue with Numpy
+
+On some systems, numpy might not properly be built and a different version might be needed. Refer to step 3.b, in this case you will see following error:
+
+```
+D:\github\idaes-electron-build\electron\py_dist\main>main.exe
+PyInstaller\loader\pyimod02_importers.py:419: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+Traceback (most recent call last):
+  File "idaes_flowsheet_processor_ui\main.py", line 18, in <module>
+  File "PyInstaller\loader\pyimod02_importers.py", line 419, in exec_module
+  File "idaes_flowsheet_processor_ui\routers\flowsheets.py", line 16, in <module>
+  File "PyInstaller\loader\pyimod02_importers.py", line 419, in exec_module
+  File "pandas\__init__.py", line 31, in <module>
+ImportError: Unable to import required dependencies:
+numpy: Error importing numpy: you should not try to import numpy from
+        its source directory; please exit the numpy source tree, and relaunch
+        your python interpreter from there.
+[47492] Failed to execute script 'main' due to unhandled exception!
+```

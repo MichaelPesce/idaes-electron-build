@@ -51,8 +51,6 @@ on:
         required: false
       APPLE_ID_PASSWORD:
         required: false
-      NOTARIZE_TOOL:
-        required: false
       TEAM_ID:
         required: false
 
@@ -234,7 +232,6 @@ jobs:
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          NOTARIZE_TOOL: ${{ secrets.NOTARIZE_TOOL }}
           TEAM_ID: ${{ secrets.TEAM_ID }}
         working-directory: ./electron
         run: |

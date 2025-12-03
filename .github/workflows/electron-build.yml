@@ -170,6 +170,9 @@ jobs:
       - name: Pip install ${{ inputs.pip-install-target }}
         run: pip install --progress-bar off ${{ inputs.pip-install-target }}
 
+      - name: Install Jaraco
+        run: pip install --progress-bar off jaraco.text
+
         ## creates package.json and .env files
       - name: Set configuration files
         run: |
@@ -197,11 +200,11 @@ jobs:
       - name: Get idaes extensions
         run: idaes get-extensions
 
-      # - name: Install numpy 2.2.6
-      #   run: pip install numpy==2.2.6
+      - name: Install numpy 2.2.6
+        run: pip install numpy==2.2.6
 
-      # - name: Install scipy 1.15.3
-      #   run: pip install scipy==1.15.3
+      - name: Install scipy 1.15.3
+        run: pip install scipy==1.15.3
 
       - name: Transfer Entry points
         working-directory: ./scripts

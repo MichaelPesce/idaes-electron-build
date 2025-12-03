@@ -124,9 +124,7 @@ hiddenimports = list(imports)
 datas.append(("./Lorem ipsum.txt", "jaraco/text"))
 if project == "watertap":
     datas.append((src_name, "watertap/core"))
-
-print(f"datas: \n{datas}")
-print(f"hiddenimports: \n{hiddenimports}")
+hiddenimports.append("jaraco.text")
 
 pyomo_imports = [
     "networkx",
@@ -159,3 +157,6 @@ pyomo_imports = [
 ]
 
 hiddenimports.extend(pyomo_imports)
+
+print(f"datas: \n{datas}")
+print(f"hiddenimports: \n{hiddenimports}")

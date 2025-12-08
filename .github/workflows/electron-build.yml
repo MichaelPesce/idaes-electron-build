@@ -170,6 +170,9 @@ jobs:
       - name: Pip install ${{ inputs.pip-install-target }}
         run: pip install --progress-bar off ${{ inputs.pip-install-target }}
 
+      - name: Install Jaraco
+        run: pip install --progress-bar off jaraco.text
+
         ## creates package.json and .env files
       - name: Set configuration files
         run: |

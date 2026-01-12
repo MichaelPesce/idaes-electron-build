@@ -180,7 +180,7 @@ def setEnvVariables(project, ui_version, project_version, additional_modules="")
 
     with open(vite_env_path, "w") as f:
         f.write(
-            f"VITE_THEME={project}\nVITE_BUILD_VERSION={ui_version}\nVITE_PROJECT_VERSION={project_version}"
+            f"VITE_THEME={project}\nVITE_PROJECT={project}\nVITE_BUILD_VERSION={ui_version}\nVITE_PROJECT_VERSION={project_version}"
         )
 
 

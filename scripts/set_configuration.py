@@ -180,7 +180,7 @@ def setEnvVariables(project, ui_version, project_version, additional_modules="")
 
     with open(react_app_env_path, "w") as f:
         f.write(
-            f"REACT_APP_THEME={project}\nREACT_APP_BUILD_VERSION={ui_version}\nREACT_APP_PROJECT_VERSION={project_version}"
+            f"REACT_APP_THEME={project}\nREACT_APP_PROJECT={project}\nREACT_APP_BUILD_VERSION={ui_version}\nREACT_APP_PROJECT_VERSION={project_version}"
         )
 
 

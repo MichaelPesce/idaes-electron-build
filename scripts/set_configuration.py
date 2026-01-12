@@ -163,7 +163,7 @@ def setEnvVariables(project, ui_version, project_version, additional_modules="")
     working_dir = pathlib.Path(__file__).parent.resolve()
     hook_env_path = os.path.join(working_dir, "../pyinstaller/hooks/.env")
     electron_env_path = os.path.join(working_dir, "../electron/.env")
-    react_app_env_path = os.path.join(
+    vite_env_path = os.path.join(
         working_dir, "../electron/idaes-flowsheet-processor-ui/frontend/.env"
     )
 
@@ -178,9 +178,9 @@ def setEnvVariables(project, ui_version, project_version, additional_modules="")
     with open(electron_env_path, "w") as f:
         f.write(f"project={project}")
 
-    with open(react_app_env_path, "w") as f:
+    with open(vite_env_path, "w") as f:
         f.write(
-            f"REACT_APP_THEME={project}\nREACT_APP_PROJECT={project}\nREACT_APP_BUILD_VERSION={ui_version}\nREACT_APP_PROJECT_VERSION={project_version}"
+            f"VITE_THEME={project}\nVITE_PROJECT={project}\nVITE_BUILD_VERSION={ui_version}\nVITE_PROJECT_VERSION={project_version}"
         )
 
 

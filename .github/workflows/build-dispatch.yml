@@ -41,6 +41,10 @@ on:
       project-version:
         description: "Python project version ie. 1.5.0. If not provided, version will be detected using Python."
         type: string
+      sign-distribution:
+        description: "If true, sign the installer when signing credentials are available."
+        type: boolean
+        default: true
 
 jobs:
   prepare:
@@ -62,6 +66,44 @@ jobs:
 
       - name: Use the release tag
         run: echo "The latest release tag is ${{ steps.get-release.outputs.release_tag }}"
+
+      - name: Log workflow inputs
+        env:
+          INPUT_OS_VERSION: ${{ inputs.os-version }}
+          INPUT_IDAES_ELECTRON_BUILD_BRANCH: ${{ github.ref_name }}
+          INPUT_PROJECT: ${{ inputs.project }}
+          INPUT_PIP_INSTALL_TARGET: ${{ inputs.pip-install-target }}
+          INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          INPUT_IFP_UI_REPO: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
+          INPUT_IFP_UI_REF: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
+          INPUT_PACKAGE_BUILD_NUMBER: ${{ inputs.package-build-number }}
+          INPUT_PROJECT_VERSION: ${{ inputs.project-version }}
+          INPUT_SIGN_DISTRIBUTION: ${{ inputs.sign-distribution }}
+          INPUT_LATEST_WATERTAP_RELEASE: ${{ steps.get-release.outputs.release_tag }}
+        run: |
+          echo "=================================================="
+          echo "Build Dispatch Inputs"
+          echo "=================================================="
+          echo "os-version: ${INPUT_OS_VERSION}"
+          echo "idaes-electron-build-branch: ${INPUT_IDAES_ELECTRON_BUILD_BRANCH}"
+          echo "project: ${INPUT_PROJECT}"
+          echo "pip-install-target: ${INPUT_PIP_INSTALL_TARGET}"
+          echo "artifact-name: ${INPUT_ARTIFACT_NAME}"
+          echo "idaes-flowsheet-processor-ui-repo: ${INPUT_IFP_UI_REPO}"
+          echo "idaes-flowsheet-processor-ui-ref: ${INPUT_IFP_UI_REF}"
+          if [ -z "${INPUT_PACKAGE_BUILD_NUMBER}" ]; then
+            echo "package-build-number: (empty, will be auto-generated)"
+          else
+            echo "package-build-number: ${INPUT_PACKAGE_BUILD_NUMBER}"
+          fi
+          if [ -z "${INPUT_PROJECT_VERSION}" ]; then
+            echo "project-version: (empty, will be auto-detected using Python)"
+          else
+            echo "project-version: ${INPUT_PROJECT_VERSION}"
+          fi
+          echo "sign-distribution: ${INPUT_SIGN_DISTRIBUTION}"
+          echo "latest-watertap-release: ${INPUT_LATEST_WATERTAP_RELEASE}"
+          echo "=================================================="
 
       - name: Generate dynamic inputs
         id: generate-dynamic-inputs
@@ -91,4 +133,5 @@ jobs:
       idaes-flowsheet-processor-ui-ref: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
       package-build-number: ${{ inputs.package-build-number }}
       project-version: ${{ inputs.project-version }}
+      sign-distribution: ${{ inputs.sign-distribution }}
     secrets: inherit

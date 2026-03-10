@@ -8,6 +8,16 @@ module.exports = async function (params) {
         return
     }
 
+    if (process.env.SIGN_DISTRIBUTION !== 'true') {
+        console.log('Skipping notarization because distribution signing is disabled')
+        return
+    }
+
+    if (!process.env.APPLE_ID || !process.env.APPLE_ID_PASSWORD || !process.env.TEAM_ID) {
+        console.log('Skipping notarization because Apple notarization credentials are not configured')
+        return
+    }
+
     console.log('afterSign hook triggered', params)
 
     let appId = `com.electron.${process.env.project}-ui`

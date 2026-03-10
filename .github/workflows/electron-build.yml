@@ -25,6 +25,9 @@ on:
         type: string
       project-version:
         type: string
+      sign-distribution:
+        type: boolean
+        default: true
       os:
         type: string
       python-version:
@@ -85,7 +88,7 @@ jobs:
     
         ## install Azure signtool for windows builds
       - name: Install Azure Signtool
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.sign-distribution
         run: |
           dotnet tool install --global AzureSignTool
 
@@ -104,7 +107,7 @@ jobs:
       
         ## handle Apple certificate, keychain setup for mac builds
       - name: Install the Apple certificate
-        if: runner.os == 'macOS' && env.BUILD_CERTIFICATE_BASE64 != '' && env.P12_PASSWORD != '' && env.KEYCHAIN_PASSWORD != ''
+        if: runner.os == 'macOS' && inputs.sign-distribution && env.BUILD_CERTIFICATE_BASE64 != '' && env.P12_PASSWORD != '' && env.KEYCHAIN_PASSWORD != ''
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
@@ -194,11 +197,11 @@ jobs:
       - name: Get idaes extensions
         run: idaes get-extensions
 
-      - name: Install numpy 2.2.6
-        run: pip install numpy==2.2.6
+      # - name: Install numpy 2.2.6
+      #   run: pip install numpy==2.2.6
 
-      - name: Install scipy 1.15.3
-        run: pip install scipy==1.15.3
+      # - name: Install scipy 1.15.3
+      #   run: pip install scipy==1.15.3
 
       - name: Transfer Entry points
         working-directory: ./scripts
@@ -227,12 +230,17 @@ jobs:
 
       - name: Build ${{ steps.os-specific-values.outputs.os }} Distribution
         env:
+          SIGN_DISTRIBUTION: ${{ inputs.sign-distribution }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           TEAM_ID: ${{ secrets.TEAM_ID }}
         working-directory: ./electron
         run: |
           if [ "${{ steps.os-specific-values.outputs.os }}" = "arm64" ]; then
+            if [ "${SIGN_DISTRIBUTION}" != "true" ]; then
+              export CSC_IDENTITY_AUTO_DISCOVERY=false
+              unset APPLE_ID APPLE_ID_PASSWORD TEAM_ID
+            fi
             npm run electron-build-mac
           elif [ "${{ steps.os-specific-values.outputs.os }}" = "win64" ]; then
             npm run electron-build-win
@@ -241,7 +249,7 @@ jobs:
           fi
 
       - name: Sign Windows Distribution
-        if: runner.os == 'Windows' && env.AZURE_KEY_VAULT_URI != '' && env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != '' && env.AZURE_CLIENT_SECRET != '' && env.AZURE_CERT_NAME != ''
+        if: runner.os == 'Windows' && inputs.sign-distribution && env.AZURE_KEY_VAULT_URI != '' && env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != '' && env.AZURE_CLIENT_SECRET != '' && env.AZURE_CERT_NAME != ''
         env:
           AZURE_KEY_VAULT_URI: ${{ secrets.AZURE_KEY_VAULT_URI }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}

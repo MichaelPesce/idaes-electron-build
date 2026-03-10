@@ -42,7 +42,7 @@ on:
         description: "Python project version ie. 1.5.0. If not provided, version will be detected using Python."
         type: string
       sign-distribution:
-        description: "If true, sign the Windows installer when signing credentials are available."
+        description: "If true, sign the installer when signing credentials are available."
         type: boolean
         default: true
 

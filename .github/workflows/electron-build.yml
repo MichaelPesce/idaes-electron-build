@@ -25,6 +25,9 @@ on:
         type: string
       project-version:
         type: string
+      sign-distribution:
+        type: boolean
+        default: true
       os:
         type: string
       python-version:
@@ -85,7 +88,7 @@ jobs:
     
         ## install Azure signtool for windows builds
       - name: Install Azure Signtool
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.sign-distribution
         run: |
           dotnet tool install --global AzureSignTool
 
@@ -241,7 +244,7 @@ jobs:
           fi
 
       - name: Sign Windows Distribution
-        if: runner.os == 'Windows' && env.AZURE_KEY_VAULT_URI != '' && env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != '' && env.AZURE_CLIENT_SECRET != '' && env.AZURE_CERT_NAME != ''
+        if: runner.os == 'Windows' && inputs.sign-distribution && env.AZURE_KEY_VAULT_URI != '' && env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != '' && env.AZURE_CLIENT_SECRET != '' && env.AZURE_CERT_NAME != ''
         env:
           AZURE_KEY_VAULT_URI: ${{ secrets.AZURE_KEY_VAULT_URI }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}

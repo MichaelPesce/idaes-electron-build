@@ -41,6 +41,10 @@ on:
       project-version:
         description: "Python project version ie. 1.5.0. If not provided, version will be detected using Python."
         type: string
+      sign-distribution:
+        description: "If true, sign the Windows installer when signing credentials are available."
+        type: boolean
+        default: true
 
 jobs:
   prepare:
@@ -74,6 +78,7 @@ jobs:
           INPUT_IFP_UI_REF: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
           INPUT_PACKAGE_BUILD_NUMBER: ${{ inputs.package-build-number }}
           INPUT_PROJECT_VERSION: ${{ inputs.project-version }}
+          INPUT_SIGN_DISTRIBUTION: ${{ inputs.sign-distribution }}
           INPUT_LATEST_WATERTAP_RELEASE: ${{ steps.get-release.outputs.release_tag }}
         run: |
           echo "=================================================="
@@ -96,6 +101,7 @@ jobs:
           else
             echo "project-version: ${INPUT_PROJECT_VERSION}"
           fi
+          echo "sign-distribution: ${INPUT_SIGN_DISTRIBUTION}"
           echo "latest-watertap-release: ${INPUT_LATEST_WATERTAP_RELEASE}"
           echo "=================================================="
 
@@ -127,4 +133,5 @@ jobs:
       idaes-flowsheet-processor-ui-ref: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
       package-build-number: ${{ inputs.package-build-number }}
       project-version: ${{ inputs.project-version }}
+      sign-distribution: ${{ inputs.sign-distribution }}
     secrets: inherit

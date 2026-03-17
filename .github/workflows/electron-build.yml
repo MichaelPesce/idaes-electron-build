@@ -86,11 +86,20 @@ jobs:
           echo "EMAIL=${{ github.event.pusher.email }}" >> $GITHUB_OUTPUT
           echo "AUTHOR=${{ github.actor }} <${{ github.event.pusher.email }}>" >> $GITHUB_OUTPUT
     
-        ## install Azure signtool for windows builds
-      - name: Install Azure Signtool
+        ## set up Jsign prerequisites for windows builds
+      - name: Set up Java for Jsign
+        if: runner.os == 'Windows' && inputs.sign-distribution
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download Jsign
         if: runner.os == 'Windows' && inputs.sign-distribution
         run: |
-          dotnet tool install --global AzureSignTool
+          curl -L --fail \
+            -o "$RUNNER_TEMP/jsign.jar" \
+            "https://github.com/ebourg/jsign/releases/download/7.4/jsign-7.4.jar"
 
         ## handle linux-only actions
       - name: Install linux packages
@@ -256,8 +265,35 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_CERT_NAME: ${{ secrets.AZURE_CERT_NAME }}
+        working-directory: electron/dist
         run: |
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v ${{ steps.artifact-path.outputs.path }}
+          set -euo pipefail
+
+          echo "Authenticating to Azure with service principal"
+          az login --service-principal \
+            --username "$AZURE_CLIENT_ID" \
+            --password "$AZURE_CLIENT_SECRET" \
+            --tenant "$AZURE_TENANT_ID" \
+            --output none
+
+          echo "Getting access token for Azure Key Vault"
+          ACCESS_TOKEN="$(az account get-access-token \
+            --resource https://vault.azure.net \
+            --query accessToken \
+            --output tsv)"
+
+          VAULT_NAME="${AZURE_KEY_VAULT_URI#https://}"
+          VAULT_NAME="${VAULT_NAME%%/}"
+          VAULT_NAME="${VAULT_NAME%%.vault.azure.net}"
+          VAULT_NAME="${VAULT_NAME%%.managedhsm.azure.net}"
+
+          java -jar "$RUNNER_TEMP/jsign.jar" \
+            --storetype AZUREKEYVAULT \
+            --keystore "$VAULT_NAME" \
+            --storepass "$ACCESS_TOKEN" \
+            --alias "$AZURE_CERT_NAME" \
+            --tsaurl "http://timestamp.digicert.com" \
+            "$(basename '${{ steps.artifact-path.outputs.path }}')"
 
       - name: Upload artifact for ${{ steps.os-specific-values.outputs.os }} build
         uses: actions/upload-artifact@v4

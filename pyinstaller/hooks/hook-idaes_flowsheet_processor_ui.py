@@ -87,22 +87,6 @@ for package in packages:
             print(f"Import of file '{png_file}' failed: {err}")
             continue
 
-    # add all yaml files to pyinstaller data
-    for yaml_file in pkg_path.glob("**/*.yaml"):
-        file_name = "/" + yaml_file.as_posix().split("/")[-1]
-        # print(file_name)
-        if skip_expr.search(str(yaml_file)):
-            continue
-        relative_path = yaml_file.relative_to(pkg_path)
-        dotted_name = relative_path.as_posix()
-        src_name = f"{base_folder}/" + package + "/" + dotted_name
-        dst_name = package + "/" + dotted_name.replace(file_name, "")
-        try:
-            datas.append((src_name, dst_name))
-        except Exception as err:  # assume the import could do bad things
-            print(f"Import of file '{yaml_file}' failed: {err}")
-            continue
-
     # add all json files to pyinstaller data
     for json_file in pkg_path.glob("**/*.json"):
         file_name = "/" + json_file.as_posix().split("/")[-1]
@@ -118,6 +102,47 @@ for package in packages:
         except Exception as err:  # assume the import could do bad things
             print(f"Import of file '{json_file}' failed: {err}")
             continue
+
+    # track traversed directories
+    # we need to maintain the entire directory structure inside the pyinstaller build,
+    # to ensure that all imports in the python code work.
+    traversed_dirs = set()
+    
+    # add all yaml files to pyinstaller data
+    for yaml_file in pkg_path.glob("**/*.yaml"):
+        file_name = "/" + yaml_file.as_posix().split("/")[-1]
+        if skip_expr.search(str(yaml_file)):
+            continue
+        relative_path = yaml_file.relative_to(pkg_path)
+        dotted_name = relative_path.as_posix()
+        src_name = f"{base_folder}/" + package + "/" + dotted_name
+        dst_name = package + "/" + dotted_name.replace(file_name, "")
+        try:
+            datas.append((src_name, dst_name))
+            # Record all ancestor dirs of this yaml file
+            for parent in relative_path.parents:
+                if parent != Path("."):
+                    traversed_dirs.add(parent)
+        except Exception as err:
+            print(f"Import of file '{yaml_file}' failed: {err}")
+            continue
+
+    # Also walk ALL subdirectories, not just those containing yaml files
+    for sub_dir in pkg_path.glob("**/"):
+        rel = sub_dir.relative_to(pkg_path)
+        if rel != Path(".") and not skip_expr.search(str(sub_dir)):
+            traversed_dirs.add(rel)
+
+    # For each traversed directory, ensure PyInstaller creates it by
+    # dropping a sentinel .keep file if no yaml was already added there
+    dirs_with_data = {Path(dst.replace(package + "/", "", 1)) for _, dst in datas}
+    for dir_path in traversed_dirs:
+        if dir_path not in dirs_with_data:
+            sentinel_src = pkg_path / dir_path / ".keep"
+            sentinel_src.touch(exist_ok=True)  # create empty sentinel on disk
+            dst_name = package + "/" + dir_path.as_posix()
+            datas.append((str(sentinel_src), dst_name))
+            print(f"Added sentinel for empty dir: {dst_name}")
 
 hiddenimports = list(imports)
 # add lorem ipsum.txt for jaraco

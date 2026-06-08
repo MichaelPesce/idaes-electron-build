@@ -21,16 +21,6 @@ on:
           - idaes
         default: watertap
 
-      pip-install-target:
-        description: "Pip target for python project (leave empty to auto-generate based on project, eg. watertap@git+https://github.com/watertap-org/watertap@main)"
-        type: string
-        default: ""
-
-      artifact-name:
-        description: "Build artifact name (leave empty to auto-generate based on project, eg. WaterTAP-Flowsheet-Processor)"
-        type: string
-        default: ""
-
       idaes-flowsheet-processor-ui-repo:
         description: "IDAES Flowsheet Processor UI repository URL"
         type: string
@@ -41,8 +31,18 @@ on:
         type: string
         default: main
 
+      pip-install-target:
+        description: "Pip target for python project (leave empty to auto-generate based on project, eg. watertap@git+https://github.com/watertap-org/watertap@main)"
+        type: string
+        default: ""
+
+      artifact-name:
+        description: "Build artifact name (leave empty to auto-generate based on project, eg. WaterTAP-Flowsheet-Processor)"
+        type: string
+        default: ""
+
       package-build-number:
-        description: "Package build number"
+        description: "Package build number (leave empty to auto-generate, eg 26.06.08)"
         type: string
 
       project-version:

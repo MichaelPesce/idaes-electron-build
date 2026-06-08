@@ -37,16 +37,16 @@ on:
         default: ""
 
       artifact-name:
-        description: "Build artifact name (leave empty to auto-generate based on project, eg. WaterTAP-Flowsheet-Processor)"
+        description: "Build artifact name (eg. WaterTAP-Flowsheet-Processor)"
         type: string
         default: ""
 
       package-build-number:
-        description: "Package build number (leave empty to auto-generate, eg 26.06.08)"
+        description: "Package build number (eg. 26.06.08)"
         type: string
 
       project-version:
-        description: "Python project version ie. 1.5.0. If not provided, version will be detected using Python."
+        description: "Python project version (eg. 1.5.0)"
         type: string
 
       sign-distribution:

@@ -101,7 +101,7 @@ jobs:
               default_target="prommis@git+https://github.com/prommis/prommis@main"
               ;;
             idaes)
-              default_target="idaes@git+https://github.com/IDAES/idaes-pse@main"
+              default_target="idaes-pse@git+https://github.com/IDAES/idaes-pse@main"
               ;;
             *)
               default_target=""

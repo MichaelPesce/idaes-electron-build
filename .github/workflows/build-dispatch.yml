@@ -11,6 +11,7 @@ on:
           - macos-latest
           - ubuntu-22.04
         default: windows-latest
+
       project:
         description: "Project name"
         type: choice
@@ -19,28 +20,35 @@ on:
           - prommis
           - idaes
         default: watertap
-      pip-install-target:
-        description: "Pip target for python project"
-        type: string
-        default: watertap@git+https://github.com/watertap-org/watertap@main
-      artifact-name:
-        description: "Build artifact name"
-        type: string
-        default: WaterTAP-Flowsheet-Processor
+
       idaes-flowsheet-processor-ui-repo:
         description: "IDAES Flowsheet Processor UI repository URL"
         type: string
         default: prommis/idaes-flowsheet-processor-ui
+
       idaes-flowsheet-processor-ui-ref:
         description: "Branch or tag for the IDAES Flowsheet Processor UI repository"
         type: string
         default: main
+
+      pip-install-target:
+        description: "Pip target for python project (leave empty to auto-generate based on project, eg. watertap@git+https://github.com/watertap-org/watertap@main)"
+        type: string
+        default: ""
+
+      artifact-name:
+        description: "Build artifact name (eg. WaterTAP-Flowsheet-Processor)"
+        type: string
+        default: ""
+
       package-build-number:
-        description: "Package build number"
+        description: "Package build number (eg. 26.06.08)"
         type: string
+
       project-version:
-        description: "Python project version ie. 1.5.0. If not provided, version will be detected using Python."
+        description: "Python project version (eg. 1.5.0)"
         type: string
+
       sign-distribution:
         description: "If true, sign the installer when signing credentials are available."
         type: boolean
@@ -53,6 +61,9 @@ jobs:
       job-name: ${{ steps.generate-dynamic-inputs.outputs.job-name }}
       os: ${{ steps.generate-dynamic-inputs.outputs.os }}
       release-tag: ${{ steps.get-release.outputs.release_tag }}
+      pip-install-target: ${{ steps.generate-dynamic-inputs.outputs.pip-install-target }}
+      artifact-name: ${{ steps.generate-dynamic-inputs.outputs.artifact-name }}
+
     steps:
       - name: Get latest watertap release
         id: get-release
@@ -64,50 +75,10 @@ jobs:
           echo "Latest release tag: $latest_release"
           echo "release_tag=$latest_release" >> "$GITHUB_OUTPUT"
 
-      - name: Use the release tag
-        run: echo "The latest release tag is ${{ steps.get-release.outputs.release_tag }}"
-
-      - name: Log workflow inputs
-        env:
-          INPUT_OS_VERSION: ${{ inputs.os-version }}
-          INPUT_IDAES_ELECTRON_BUILD_BRANCH: ${{ github.ref_name }}
-          INPUT_PROJECT: ${{ inputs.project }}
-          INPUT_PIP_INSTALL_TARGET: ${{ inputs.pip-install-target }}
-          INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
-          INPUT_IFP_UI_REPO: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
-          INPUT_IFP_UI_REF: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
-          INPUT_PACKAGE_BUILD_NUMBER: ${{ inputs.package-build-number }}
-          INPUT_PROJECT_VERSION: ${{ inputs.project-version }}
-          INPUT_SIGN_DISTRIBUTION: ${{ inputs.sign-distribution }}
-          INPUT_LATEST_WATERTAP_RELEASE: ${{ steps.get-release.outputs.release_tag }}
-        run: |
-          echo "=================================================="
-          echo "Build Dispatch Inputs"
-          echo "=================================================="
-          echo "os-version: ${INPUT_OS_VERSION}"
-          echo "idaes-electron-build-branch: ${INPUT_IDAES_ELECTRON_BUILD_BRANCH}"
-          echo "project: ${INPUT_PROJECT}"
-          echo "pip-install-target: ${INPUT_PIP_INSTALL_TARGET}"
-          echo "artifact-name: ${INPUT_ARTIFACT_NAME}"
-          echo "idaes-flowsheet-processor-ui-repo: ${INPUT_IFP_UI_REPO}"
-          echo "idaes-flowsheet-processor-ui-ref: ${INPUT_IFP_UI_REF}"
-          if [ -z "${INPUT_PACKAGE_BUILD_NUMBER}" ]; then
-            echo "package-build-number: (empty, will be auto-generated)"
-          else
-            echo "package-build-number: ${INPUT_PACKAGE_BUILD_NUMBER}"
-          fi
-          if [ -z "${INPUT_PROJECT_VERSION}" ]; then
-            echo "project-version: (empty, will be auto-detected using Python)"
-          else
-            echo "project-version: ${INPUT_PROJECT_VERSION}"
-          fi
-          echo "sign-distribution: ${INPUT_SIGN_DISTRIBUTION}"
-          echo "latest-watertap-release: ${INPUT_LATEST_WATERTAP_RELEASE}"
-          echo "=================================================="
-
       - name: Generate dynamic inputs
         id: generate-dynamic-inputs
         run: |
+          # OS -> job mapping
           if [ "${{ inputs.os-version }}" == "windows-latest" ]; then
             echo "job-name=Windows Build" >> $GITHUB_OUTPUT
             echo "os=windows" >> $GITHUB_OUTPUT
@@ -119,16 +90,110 @@ jobs:
             echo "os=mac" >> $GITHUB_OUTPUT
           fi
 
+          # Compute dynamic pip-install-target based on project (only if user didn't provide one)
+          user_target="${{ inputs.pip-install-target }}"
+
+          case "${{ inputs.project }}" in
+            watertap)
+              default_target="watertap@git+https://github.com/watertap-org/watertap@main"
+              ;;
+            prommis)
+              default_target="prommis@git+https://github.com/prommis/prommis@main"
+              ;;
+            idaes)
+              default_target="idaes-pse@git+https://github.com/IDAES/idaes-pse@main"
+              ;;
+            *)
+              default_target=""
+              ;;
+          esac
+
+          effective_target="$user_target"
+          if [ -z "$effective_target" ]; then
+            effective_target="$default_target"
+          fi
+
+          # Compute dynamic artifact-name based on project (only if user didn't provide one)
+          user_artifact="${{ inputs.artifact-name }}"
+
+          case "${{ inputs.project }}" in
+            watertap)
+              default_artifact="WaterTAP-Flowsheet-Processor"
+              ;;
+            prommis)
+              default_artifact="PrOMMiS-flowsheet-processor"
+              ;;
+            idaes)
+              default_artifact="IDAES-flowsheet-processor"
+              ;;
+            *)
+              default_artifact=""
+              ;;
+          esac
+
+          effective_artifact="$user_artifact"
+          if [ -z "$effective_artifact" ]; then
+            effective_artifact="$default_artifact"
+          fi
+
+          echo "pip-install-target=$effective_target" >> $GITHUB_OUTPUT
+          echo "artifact-name=$effective_artifact" >> $GITHUB_OUTPUT
+
+      - name: Log workflow inputs (raw + effective)
+        env:
+          INPUT_OS_VERSION: ${{ inputs.os-version }}
+          INPUT_PROJECT: ${{ inputs.project }}
+          INPUT_PIP_INSTALL_TARGET_RAW: ${{ inputs.pip-install-target }}
+          INPUT_PIP_INSTALL_TARGET_EFFECTIVE: ${{ steps.generate-dynamic-inputs.outputs.pip-install-target }}
+          INPUT_IDAES_ELECTRON_BUILD_BRANCH: ${{ github.ref_name }}
+          INPUT_IFP_UI_REPO: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
+          INPUT_IFP_UI_REF: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
+          INPUT_PACKAGE_BUILD_NUMBER: ${{ inputs.package-build-number }}
+          INPUT_PROJECT_VERSION: ${{ inputs.project-version }}
+          INPUT_SIGN_DISTRIBUTION: ${{ inputs.sign-distribution }}
+          INPUT_LATEST_WATERTAP_RELEASE: ${{ steps.get-release.outputs.release_tag }}
+          INPUT_ARTIFACT_NAME_RAW: ${{ inputs.artifact-name }}
+          INPUT_ARTIFACT_NAME_EFFECTIVE: ${{ steps.generate-dynamic-inputs.outputs.artifact-name }}
+        run: |
+          echo "=================================================="
+          echo "Build Dispatch Inputs (raw + effective)"
+          echo "=================================================="
+          echo "os-version: ${INPUT_OS_VERSION}"
+          echo "idaes-electron-build-branch: ${INPUT_IDAES_ELECTRON_BUILD_BRANCH}"
+          echo "project: ${INPUT_PROJECT}"
+          echo "pip-install-target (input): ${INPUT_PIP_INSTALL_TARGET_RAW:-'(empty, will be auto-selected)'}"
+          echo "pip-install-target (effective): ${INPUT_PIP_INSTALL_TARGET_EFFECTIVE}"
+          echo "artifact-name (input): ${INPUT_ARTIFACT_NAME_RAW:-'(empty, will be auto-selected)'}"
+          echo "artifact-name (effective): ${INPUT_ARTIFACT_NAME_EFFECTIVE}"
+          echo "idaes-flowsheet-processor-ui-repo: ${INPUT_IFP_UI_REPO}"
+          echo "idaes-flowsheet-processor-ui-ref: ${INPUT_IFP_UI_REF}"
+
+          if [ -z "${INPUT_PACKAGE_BUILD_NUMBER}" ]; then
+            echo "package-build-number: (empty, will be auto-generated)"
+          else
+            echo "package-build-number: ${INPUT_PACKAGE_BUILD_NUMBER}"
+          fi
+
+          if [ -z "${INPUT_PROJECT_VERSION}" ]; then
+            echo "project-version: (empty, will be auto-detected using Python)"
+          else
+            echo "project-version: ${INPUT_PROJECT_VERSION}"
+          fi
+
+          echo "sign-distribution: ${INPUT_SIGN_DISTRIBUTION}"
+          echo "latest-watertap-release: ${INPUT_LATEST_WATERTAP_RELEASE}"
+          echo "=================================================="
+
   electron-build:
     needs: prepare
     uses: ./.github/workflows/electron-build.yml
     name: ${{ inputs.project }}
     with:
-      os: ${{ needs.prepare.outputs.os }} 
+      os: ${{ needs.prepare.outputs.os }}
       os-version: ${{ inputs.os-version }}
       project: ${{ inputs.project }}
-      pip-install-target: ${{ inputs.pip-install-target }}
-      artifact-name: ${{ inputs.artifact-name }}
+      pip-install-target: ${{ needs.prepare.outputs.pip-install-target }}
+      artifact-name: ${{ needs.prepare.outputs.artifact-name }}
       idaes-flowsheet-processor-ui-repo: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
       idaes-flowsheet-processor-ui-ref: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
       package-build-number: ${{ inputs.package-build-number }}

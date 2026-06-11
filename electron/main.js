@@ -276,28 +276,31 @@ app.whenReady().then(() => {
         app.quit()
       })
 
-      installationProcess.on('exit', handleInstallationComplete)
+      let installationExitFired = false
+      installationProcess.on('exit', (code, signal) => {
+        installationExitFired = true
+        _log(`Installation process EXIT EVENT fired: code=${code}, signal=${signal}`)
+        clearTimeout(installationTimeout)
+        handleInstallationComplete(code)
+      })
 
-      // Set aggressive timeout for installation process (30 seconds - should complete much faster)
+      // Set timeout to check if process is still alive (not as a kill timer)
       const installationStartTime = Date.now()
       const installationTimeout = setTimeout(() => {
         const elapsedTime = ((Date.now() - installationStartTime) / 1000).toFixed(1)
-        if (installationProcess && !installationProcess.killed) {
-          _logError(`Installation process (PID ${installationProcess.pid}) exceeded 30 second timeout after ${elapsedTime}s, force-killing`)
-          try {
-            installationProcess.kill('SIGKILL')  // Aggressive kill
-            _log(`Force-kill signal sent to installation process (PID ${installationProcess.pid})`)
-          } catch (e) {
-            _logError(`Failed to kill installation process (PID ${installationProcess.pid}):`, e)
-          }
+        const isAlive = !installationProcess.killed
+        _log(`Installation process check at ${elapsedTime}s: alive=${isAlive}, exitEventFired=${installationExitFired}, PID=${installationProcess.pid}`)
+        
+        if (!isAlive && !installationExitFired) {
+          _logError(`Process appears dead but exit event hasn't fired - forcing handler call`)
+          installationExitFired = true
+          handleInstallationComplete(null)
+        } else if (isAlive && !installationExitFired) {
+          _logError(`Installation process (PID ${installationProcess.pid}) is still alive after ${elapsedTime}s (Python should have exited!)`)
+          _logError(`Force-killing process...`)
+          installationProcess.kill('SIGKILL')
         }
-      }, 30 * 1000)
-
-      installationProcess.on('exit', () => {
-        const elapsedTime = ((Date.now() - installationStartTime) / 1000).toFixed(1)
-        _log(`Installation process (PID ${installationProcess.pid}) completed in ${elapsedTime}s`)
-        clearTimeout(installationTimeout)
-      })
+      }, 10 * 1000)  // Check after 10 seconds instead of waiting 30
     }
     
     app.on('activate', () => {

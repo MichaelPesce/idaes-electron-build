@@ -88,7 +88,6 @@ function createWindow() {
 }
 
 const installExtensions = () => {
-
   try{
     const installationProcess = spawn(
       path.join(__dirname, "./py_dist/main/main"),
@@ -97,7 +96,7 @@ const installExtensions = () => {
       ]
     );
 
-  _log("installing idaes extensions");
+    _log("installing idaes extensions");
 
     var scriptOutput = "";
     installationProcess.stdout.setEncoding('utf8');
@@ -116,7 +115,8 @@ const installExtensions = () => {
     
     return installationProcess;
   } catch (error) {
-    _logError("unable to get extensions:", error);
+    _logError("unable to spawn extensions process:", error);
+    return null;
   }
 }
 
@@ -208,41 +208,68 @@ app.whenReady().then(() => {
           app.quit()
         })
 
-        let numTrials = 0
-        
-        // Start Window 
-        var startUp = (url, appName, spawnedProcess, successFn=null, maxTrials=15) => {
-            axios.get(url).then(() => {
-                _log(`${appName} is ready at ${url}!`)
-            })
-            .catch(async () => {
-                _log(`Waiting to be able to connect ${appName} at ${url}...`)
-                await new Promise(resolve => setTimeout(resolve, 2000))
-                numTrials += 1
-                if (numTrials < maxTrials) {
-                    startUp(url, appName, spawnedProcess, successFn, maxTrials)
-                }
-                else {
-                    _logError(`Exceeded maximum trials to connect to ${appName}`)
-                    spawnedProcess.kill('SIGINT')
-                    app.quit()
-                }
-            });
-        };
-        startUp(serverURL, 'FastAPI Server', serverProcess, createWindow)
-        app.on('quit', () => {
-          _log('shutting down backend server')
-          serverProcess.kill()
+        serverProcess.on('exit', (code) => {
+          _logError(`Server process exited with code ${code}`)
+          app.quit()
         })
+
+        // Start Window 
+        const startUp = (url, appName, spawnedProcess, successFn, maxTrials=15) => {
+            let trialCount = 0
+            const attemptConnection = () => {
+                axios.get(url).then(() => {
+                    _log(`${appName} is ready at ${url}!`)
+                    if (successFn) successFn()
+                })
+                .catch(async () => {
+                    _log(`Waiting to be able to connect ${appName} at ${url}... (attempt ${trialCount + 1}/${maxTrials})`)
+                    trialCount += 1
+                    if (trialCount < maxTrials) {
+                        await new Promise(resolve => setTimeout(resolve, 2000))
+                        attemptConnection()
+                    }
+                    else {
+                        _logError(`Exceeded maximum trials to connect to ${appName}`)
+                        spawnedProcess.kill('SIGINT')
+                        app.quit()
+                    }
+                });
+            };
+            attemptConnection()
+        };
+
+        startUp(serverURL, 'FastAPI Server', serverProcess, createWindow)
       }
 
       // Add listeners for installation process
+      if (!installationProcess) {
+        _logError('Installation process failed to start')
+        app.quit()
+        return
+      }
+
       installationProcess.on('error', (error) => {
         _logError('Installation process error:', error)
         app.quit()
       })
 
       installationProcess.on('exit', handleInstallationComplete)
+
+      // Set aggressive timeout for installation process (30 seconds - should complete much faster)
+      const installationTimeout = setTimeout(() => {
+        if (installationProcess && !installationProcess.killed) {
+          _logError('Installation process exceeded 30 second timeout, force-killing')
+          try {
+            installationProcess.kill('SIGKILL')  // Aggressive kill
+          } catch (e) {
+            _logError('Failed to kill installation process:', e)
+          }
+        }
+      }, 30 * 1000)
+
+      installationProcess.on('exit', () => {
+        clearTimeout(installationTimeout)
+      })
     }
     
     app.on('activate', () => {

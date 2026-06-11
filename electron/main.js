@@ -85,6 +85,7 @@ function createWindow() {
       ? uiURL
       : `file://${path.join(__dirname, './build/index.html')}`
   )
+  return win;
 }
 
 const installExtensions = () => {
@@ -240,7 +241,7 @@ app.whenReady().then(() => {
             const attemptConnection = () => {
                 axios.get(url).then(() => {
                     _log(`${appName} is ready at ${url}!`)
-                    if (successFn) successFn()
+                    // if (successFn) successFn()
                 })
                 .catch(async () => {
                     _log(`Waiting to be able to connect ${appName} at ${url}... (attempt ${trialCount + 1}/${maxTrials})`)
@@ -304,7 +305,10 @@ app.whenReady().then(() => {
     }
     
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
+        if (BrowserWindow.getAllWindows().length === 0) {
+          _log("BrowserWindow.getAllWindows().length === 0: creating new window");
+          createWindow()
+        }
     })
 })
 

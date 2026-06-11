@@ -261,6 +261,10 @@ app.whenReady().then(() => {
         };
 
         startUp(serverURL, 'FastAPI Server', serverProcess, createWindow)
+        app.on('quit', () => {
+          _log("shutting down backend server");
+            serverProcess.kill();
+        })
       }
 
       // Add listeners for installation process
@@ -314,7 +318,5 @@ app.whenReady().then(() => {
 
 // For windows & linux platforms
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+    if (process.platform !== 'darwin') app.quit();
 })
-
-

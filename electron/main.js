@@ -122,6 +122,7 @@ const installExtensions = () => {
 
 const startServer = () => {
     if (isDev) {
+      _log('Starting backend in dev mode (uvicorn)')
       const backendProcess = spawn("uvicorn", 
         [
             "main:app",
@@ -135,12 +136,19 @@ const startServer = () => {
         }
       );
       
+      _log(`Dev backend process spawned with PID: ${backendProcess.pid}`)
+      
       backendProcess.on('error', (error) => {
-        _logError('Dev backend process failed to start:', error);
+        _logError(`Dev backend process (PID ${backendProcess.pid}) failed to start:`, error);
+      });
+
+      backendProcess.on('exit', (code, signal) => {
+        _logError(`Dev backend process (PID ${backendProcess.pid}) exited with code ${code}, signal ${signal}`);
       });
       
       return backendProcess;
     } else {
+      _log('Starting backend in production mode (PyInstaller main)')
       try {
         const backendProcess = spawn(
           path.join(__dirname, "./py_dist/main/main"),
@@ -149,21 +157,27 @@ const startServer = () => {
           ]
         );
         
+        _log(`Production backend process spawned with PID: ${backendProcess.pid}`)
+        
         var scriptOutput = "";
         backendProcess.stdout.setEncoding('utf8');
         backendProcess.stdout.on('data', function(data) {
-            _log('stdout:', data.toString());
+            _log('Backend stdout:', data.toString());
             scriptOutput+=data;
         });
 
         backendProcess.stderr.setEncoding('utf8');
         backendProcess.stderr.on('data', function(data) {
-            _log('stderr:', data.toString());
+            _log('Backend stderr:', data.toString());
             scriptOutput+=data;
         });
         
         backendProcess.on('error', (error) => {
-          _logError('Production backend process failed to start:', error);
+          _logError(`Production backend process (PID ${backendProcess.pid}) failed to start:`, error);
+        });
+
+        backendProcess.on('exit', (code, signal) => {
+          _logError(`Production backend process (PID ${backendProcess.pid}) exited with code ${code}, signal ${signal}`);
         });
         
         _log("Python process started in built mode");
@@ -190,9 +204,14 @@ app.whenReady().then(() => {
       _log("finished call installExtensions()")
       
       const handleInstallationComplete = (code) => {
-        if (code !== 0) {
+        if (code === 0) {
+          _log('Installation process exited successfully with code 0')
+        } else if (code === null) {
+          _log('Installation process was killed or terminated by signal')
+        } else {
           _logError(`Installation process exited with code ${code}`)
         }
+        
         _log('starting server')
         serverProcess = startServer()
 
@@ -208,8 +227,10 @@ app.whenReady().then(() => {
           app.quit()
         })
 
-        serverProcess.on('exit', (code) => {
-          _logError(`Server process exited with code ${code}`)
+        serverProcess.on('exit', (code, signal) => {
+          if (code !== 0 || signal) {
+            _logError(`Server process exited with code ${code}, signal ${signal}`)
+          }
           app.quit()
         })
 
@@ -243,31 +264,38 @@ app.whenReady().then(() => {
 
       // Add listeners for installation process
       if (!installationProcess) {
-        _logError('Installation process failed to start')
+        _logError('Installation process failed to start - spawn returned null')
         app.quit()
         return
       }
 
+      _log(`Installation process spawned with PID: ${installationProcess.pid}`)
+
       installationProcess.on('error', (error) => {
-        _logError('Installation process error:', error)
+        _logError(`Installation process error (PID ${installationProcess.pid}):`, error)
         app.quit()
       })
 
       installationProcess.on('exit', handleInstallationComplete)
 
       // Set aggressive timeout for installation process (30 seconds - should complete much faster)
+      const installationStartTime = Date.now()
       const installationTimeout = setTimeout(() => {
+        const elapsedTime = ((Date.now() - installationStartTime) / 1000).toFixed(1)
         if (installationProcess && !installationProcess.killed) {
-          _logError('Installation process exceeded 30 second timeout, force-killing')
+          _logError(`Installation process (PID ${installationProcess.pid}) exceeded 30 second timeout after ${elapsedTime}s, force-killing`)
           try {
             installationProcess.kill('SIGKILL')  // Aggressive kill
+            _log(`Force-kill signal sent to installation process (PID ${installationProcess.pid})`)
           } catch (e) {
-            _logError('Failed to kill installation process:', e)
+            _logError(`Failed to kill installation process (PID ${installationProcess.pid}):`, e)
           }
         }
       }, 30 * 1000)
 
       installationProcess.on('exit', () => {
+        const elapsedTime = ((Date.now() - installationStartTime) / 1000).toFixed(1)
+        _log(`Installation process (PID ${installationProcess.pid}) completed in ${elapsedTime}s`)
         clearTimeout(installationTimeout)
       })
     }

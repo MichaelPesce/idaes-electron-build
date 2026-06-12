@@ -28,6 +28,16 @@ exports.log = (entry) => log.info(entry)
 
 require('@electron/remote/main').initialize()
 
+function _log(...args) {
+  console.log(...args);
+  log.info(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '));
+}
+
+function _logError(...args) {
+  console.error(...args);
+  log.error(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '));
+}
+
 // needs error handling?
 function getWindowSettings () {
   const default_bounds = [800, 600]
@@ -49,7 +59,7 @@ function saveBounds (bounds) {
 function createWindow() {
   //get window size
   const bounds = getWindowSettings();
-  console.log('bounds:',bounds)
+  _log('bounds:',bounds)
 
   // Create the browser window.
   const win = new BrowserWindow({
@@ -65,8 +75,7 @@ function createWindow() {
     win.webContents.openDevTools()
   } 
   
-  console.log("storing user preferences in: ",app.getPath('userData'));
-  log.info("storing user preferences in: ",app.getPath('userData'))
+  _log("storing user preferences in: ",app.getPath('userData'));
   
   // save size of window when resized
   win.on("resized", () => saveBounds(win.getSize()));
@@ -76,20 +85,19 @@ function createWindow() {
       ? uiURL
       : `file://${path.join(__dirname, './build/index.html')}`
   )
+  return win;
 }
 
 const installExtensions = () => {
-
   try{
-    installationProcess = spawn(
+    const installationProcess = spawn(
       path.join(__dirname, "./py_dist/main/main"),
       [
         "-i"
       ]
     );
 
-  log.info("installing idaes extensions");
-  console.log("installing idaes extensions");
+    _log("installing idaes extensions");
 
     var scriptOutput = "";
     installationProcess.stdout.setEncoding('utf8');
@@ -105,16 +113,18 @@ const installExtensions = () => {
         data=data.toString();
         scriptOutput+=data;
     });
+    
+    return installationProcess;
   } catch (error) {
-    log.info("unable to get extensions: ",error);
-    console.error("unable to get extensions: ",error);
+    _logError("unable to spawn extensions process:", error);
+    return null;
   }
-  return installationProcess;
 }
 
 const startServer = () => {
     if (isDev) {
-      backendProcess = spawn("uvicorn", 
+      _log('Starting backend in dev mode (uvicorn)')
+      const backendProcess = spawn("uvicorn", 
         [
             "main:app",
             "--host",
@@ -127,96 +137,186 @@ const startServer = () => {
         }
       );
       
+      _log(`Dev backend process spawned with PID: ${backendProcess.pid}`)
+      
+      backendProcess.on('error', (error) => {
+        _logError(`Dev backend process (PID ${backendProcess.pid}) failed to start:`, error);
+      });
+
+      backendProcess.on('exit', (code, signal) => {
+        _logError(`Dev backend process (PID ${backendProcess.pid}) exited with code ${code}, signal ${signal}`);
+      });
+      
+      return backendProcess;
     } else {
+      _log('Starting backend in production mode (PyInstaller main)')
       try {
-      backendProcess = spawn(
-        path.join(__dirname, "./py_dist/main/main"),
-        [
-          "-p"
-        ]
-      );
-      var scriptOutput = "";
+        const backendProcess = spawn(
+          path.join(__dirname, "./py_dist/main/main"),
+          [
+            "-p"
+          ]
+        );
+        
+        _log(`Production backend process spawned with PID: ${backendProcess.pid}`)
+        
+        var scriptOutput = "";
         backendProcess.stdout.setEncoding('utf8');
         backendProcess.stdout.on('data', function(data) {
-            console.log('stdout: ' + data);
-            log.info(data);
-            data=data.toString();
+            _log('Backend stdout:', data.toString());
             scriptOutput+=data;
         });
 
         backendProcess.stderr.setEncoding('utf8');
         backendProcess.stderr.on('data', function(data) {
-            console.log('stderr: ' + data);
-            log.info(data);
-            data=data.toString();
+            _log('Backend stderr:', data.toString());
             scriptOutput+=data;
         });
-      log.info("Python process started in built mode");
-      console.log("Python process started in built mode");
-    } catch (error) {
-      log.info("unable to start python process in build mode: ");
-      log.info(error)
-      console.error("unable to start python process in build mode: ");
-      console.error(error)
+        
+        backendProcess.on('error', (error) => {
+          _logError(`Production backend process (PID ${backendProcess.pid}) failed to start:`, error);
+        });
+
+        backendProcess.on('exit', (code, signal) => {
+          _logError(`Production backend process (PID ${backendProcess.pid}) exited with code ${code}, signal ${signal}`);
+        });
+        
+        _log("Python process started in built mode");
+        return backendProcess;
+      } catch (error) {
+        _logError("unable to start python process in build mode:", error);
+        return null;
+      }
     }
-    }
-    return backendProcess;
 }
 
 
 app.whenReady().then(() => {
+    _log(`isDev is ${isDev}`)
     // Entry point
     if (isDev) {
-      
       createWindow()
     } else {
       let win = createWindow();
+      _log("created window")
       let serverProcess
+      _log("calling installationProcess = installExtensions()")
       let installationProcess = installExtensions()
-      installationProcess.on('exit', code => {
-        log.info('starting server')
-        console.log('starting server')
+      _log("finished call installExtensions()")
+      
+      const handleInstallationComplete = (code) => {
+        if (code === 0) {
+          _log('Installation process exited successfully with code 0')
+        } else if (code === null) {
+          _log('Installation process was killed or terminated by signal')
+        } else {
+          _logError(`Installation process exited with code ${code}`)
+        }
+        
+        _log('starting server')
         serverProcess = startServer()
 
-        let noTrails = 0
-        
+        if (!serverProcess) {
+          _logError('Failed to start server process')
+          app.quit()
+          return
+        }
+
+        // Add error listener for server process
+        serverProcess.on('error', (error) => {
+          _logError('Server process error:', error)
+          app.quit()
+        })
+
+        serverProcess.on('exit', (code, signal) => {
+          if (code !== 0 || signal) {
+            _logError(`Server process exited with code ${code}, signal ${signal}`)
+          }
+          app.quit()
+        })
+
         // Start Window 
-        var startUp = (url, appName, spawnedProcess, successFn=null, maxTrials=15) => {
-            axios.get(url).then(() => {
-                console.log(`${appName} is ready at ${url}!`)
-            })
-            .catch(async () => {
-                console.log(`Waiting to be able to connect ${appName} at ${url}...`)
-                log.info(`Waiting to be able to connect ${appName} at ${url}...`)
-                await new Promise(resolve => setTimeout(resolve, 2000))
-                noTrails += 1
-                if (noTrails < maxTrials) {
-                    startUp(url, appName, spawnedProcess, successFn, maxTrials)
-                }
-                else {
-                    console.error(`Exceeded maximum trials to connect to ${appName}`)
-                    log.error(`Exceeded maximum trials to connect to ${appName}`)
-                    spawnedProcess.kill('SIGINT')
-                }
-            });
+        const startUp = (url, appName, spawnedProcess, successFn, maxTrials=15) => {
+            let trialCount = 0
+            const attemptConnection = () => {
+                axios.get(url).then(() => {
+                    _log(`${appName} is ready at ${url}!`)
+                    // if (successFn) successFn()
+                })
+                .catch(async () => {
+                    _log(`Waiting to be able to connect ${appName} at ${url}... (attempt ${trialCount + 1}/${maxTrials})`)
+                    trialCount += 1
+                    if (trialCount < maxTrials) {
+                        await new Promise(resolve => setTimeout(resolve, 2000))
+                        attemptConnection()
+                    }
+                    else {
+                        _logError(`Exceeded maximum trials to connect to ${appName}`)
+                        spawnedProcess.kill('SIGINT')
+                        app.quit()
+                    }
+                });
+            };
+            attemptConnection()
         };
+
         startUp(serverURL, 'FastAPI Server', serverProcess, createWindow)
         app.on('quit', () => {
-          console.log('shutting down backend server')
-          log.info('shutting down backend server')
-          serverProcess.kill()
+          _log("shutting down backend server");
+            serverProcess.kill();
         })
+      }
+
+      // Add listeners for installation process
+      if (!installationProcess) {
+        _logError('Installation process failed to start - spawn returned null')
+        app.quit()
+        return
+      }
+
+      _log(`Installation process spawned with PID: ${installationProcess.pid}`)
+
+      installationProcess.on('error', (error) => {
+        _logError(`Installation process error (PID ${installationProcess.pid}):`, error)
+        app.quit()
       })
+
+      let installationExitFired = false
+      installationProcess.on('exit', (code, signal) => {
+        installationExitFired = true
+        _log(`Installation process EXIT EVENT fired: code=${code}, signal=${signal}`)
+        clearTimeout(installationTimeout)
+        handleInstallationComplete(code)
+      })
+
+      // Set timeout to check if process is still alive (not as a kill timer)
+      const installationStartTime = Date.now()
+      const installationTimeout = setTimeout(() => {
+        const elapsedTime = ((Date.now() - installationStartTime) / 1000).toFixed(1)
+        const isAlive = !installationProcess.killed
+        _log(`Installation process check at ${elapsedTime}s: alive=${isAlive}, exitEventFired=${installationExitFired}, PID=${installationProcess.pid}`)
+        
+        if (!isAlive && !installationExitFired) {
+          _logError(`Process appears dead but exit event hasn't fired - forcing handler call`)
+          installationExitFired = true
+          handleInstallationComplete(null)
+        } else if (isAlive && !installationExitFired) {
+          _logError(`Installation process (PID ${installationProcess.pid}) is still alive after ${elapsedTime}s (Python should have exited!)`)
+          _logError(`Force-killing process...`)
+          installationProcess.kill('SIGKILL')
+        }
+      }, 10 * 1000)  // Check after 10 seconds instead of waiting 30
     }
     
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
+        if (BrowserWindow.getAllWindows().length === 0) {
+          _log("BrowserWindow.getAllWindows().length === 0: creating new window");
+          createWindow()
+        }
     })
 })
 
 // For windows & linux platforms
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+    if (process.platform !== 'darwin') app.quit();
 })
-
-

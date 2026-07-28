@@ -23,10 +23,17 @@ python dispatch_command.py <OS> <PROJECT> [-r <RELEASE>]
 ```
 
 For example:
-* Windows / WaterTAP / realease 'main' (default): `python dispatch_command.py windows watertap`
-* MacOS / ProMMiS / release 1.0.0: `python dispatch_command.py macos prommis -r 1.0.0`
 
-You can print out the command without tryint to run it by adding `-n` to the command-line.
+* Windows / WaterTAP / release 'main' (default): 
+    ```sh
+    python dispatch_command.py windows watertap
+    ```
+* MacOS / ProMMiS / release 1.0.0:
+    ```sh
+    python dispatch_command.py macos prommis -r 1.0.0
+    ```
+
+You can print out the command without trying to run it by adding `-n` to the command-line.
 
 As usual, `-h` will give help on the command-line options.
 

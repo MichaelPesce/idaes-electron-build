@@ -8,28 +8,40 @@ This repository is for building desktop versions of user interaces under the IDA
 
 The following steps assume that:
 
-1. `gh` is already installed and configured For installation instructions, see https://github.com/cli/cli.
-2. This repository (i.e. https://github.com/prommis/idaes-electron-build) has been cloned locally and the working directory is set to the root of the repository
+1. `gh` is already installed and configured (i..e. in your system path).
+   For installation instructions, see https://github.com/cli/cli.
+2. This repository (i.e. https://github.com/prommis/idaes-electron-build) has been cloned locally and the working directory
+   is set to the root of the repository
+3. You have a reasonably recent Python interpreter in your path.
 
-### Run application dispatch for WaterTAP
+### Run application dispatch script
 
-```sh
-gh workflow run .github/workflows/build-dispatch.yml -f project=watertap -f os-version=windows-latest -f artifact-name=WaterTAP-Flowsheet-Processor -f pip-install-target=watertap@git+https://github.com/watertap-org/watertap@main
-```
-
-### Run application dispatch for IDAES
-
-```sh
-gh workflow run .github/workflows/build-dispatch.yml -f project=idaes -f os-version=windows-latest -f artifact-name=IDAES-Flowsheet-Processor -f pip-install-target=idaes-pse@git+https://github.com/IDAES/idaes-pse
-```
-
-### Run application dispatch for PROMMIS
+From the root directory, run this Python script:
 
 ```sh
-gh workflow run .github/workflows/build-dispatch.yml -f project=prommis -f os-version=windows-latest -f artifact-name=PROMMIS-Flowsheet-Processor -f pip-install-target=prommis@git+https://github.com/prommis/prommis@main
+python dispatch_command.py <OS> <PROJECT> [-r <RELEASE>]
 ```
 
-These commands will initiate a windows deployment. For mac, use os-version=macos-latest. For a complete set of input options, see below:
+For example:
+
+* Windows / WaterTAP / release 'main' (default): 
+    ```sh
+    python dispatch_command.py windows watertap
+    ```
+* MacOS / ProMMiS / release 1.0.0:
+    ```sh
+    python dispatch_command.py macos prommis -r 1.0.0
+    ```
+
+You can print out the command without trying to run it by adding `-n` to the command-line.
+
+As usual, `-h` will give help on the command-line options.
+
+### Manual control
+
+For more manual control, you can modify the printed command-line with any of the input options
+shown below (use `-f name=value` for each):
+
 - project
   - type: choice
   - options:

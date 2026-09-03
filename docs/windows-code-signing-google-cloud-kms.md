@@ -209,6 +209,82 @@ Set these repository variables in every repository that is allowed to sign. A ma
 | `GOOGLE_KMS_CNG_VERSION` | Optional CNG Provider version, default `1.4` |
 | `WINDOWS_SIGNING_TIMESTAMP_URL` | Optional timestamp URL, default `http://timestamp.digicert.com` |
 
+If the Google Cloud resources already exist and you only need to fill in the GitHub variables, start with the project ID:
+
+```bash
+export PROJECT_ID="my-code-signing-project"
+```
+
+Find the Workload Identity Pool and Provider:
+
+```bash
+gcloud iam workload-identity-pools list \
+  --project="$PROJECT_ID" \
+  --location=global
+
+export POOL_ID="github-actions"
+
+gcloud iam workload-identity-pools providers list \
+  --project="$PROJECT_ID" \
+  --location=global \
+  --workload-identity-pool="$POOL_ID"
+
+export PROVIDER_ID="windows-code-signing"
+
+gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" \
+  --project="$PROJECT_ID" \
+  --location=global \
+  --workload-identity-pool="$POOL_ID" \
+  --format='value(name)'
+```
+
+Use the final command's output as `GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER`.
+
+Find the signing service account:
+
+```bash
+gcloud iam service-accounts list \
+  --project="$PROJECT_ID" \
+  --format='table(email,displayName)'
+```
+
+Use the signing service account email as `GCP_CODE_SIGNING_SERVICE_ACCOUNT`.
+
+Find the KMS key version:
+
+```bash
+export KMS_LOCATION="global"
+
+gcloud kms keyrings list \
+  --project="$PROJECT_ID" \
+  --location="$KMS_LOCATION"
+
+export KMS_KEYRING="codesigning"
+
+gcloud kms keys list \
+  --project="$PROJECT_ID" \
+  --location="$KMS_LOCATION" \
+  --keyring="$KMS_KEYRING"
+
+export KMS_KEY="windows-code-signing"
+
+gcloud kms keys versions list \
+  --project="$PROJECT_ID" \
+  --location="$KMS_LOCATION" \
+  --keyring="$KMS_KEYRING" \
+  --key="$KMS_KEY"
+```
+
+Choose the enabled key version whose public key matches the code-signing certificate. Then set `GCP_CODE_SIGNING_KMS_KEY_VERSION` to the full resource path:
+
+```bash
+export KMS_VERSION="2"
+
+echo "projects/${PROJECT_ID}/locations/${KMS_LOCATION}/keyRings/${KMS_KEYRING}/cryptoKeys/${KMS_KEY}/cryptoKeyVersions/${KMS_VERSION}"
+```
+
+Do not guess the key version. If more than one version is enabled, confirm which public key was used for the certificate CSR before signing a release.
+
 Set these repository or protected-environment secrets in every repository that is allowed to sign:
 
 | GitHub secret | Contents |
@@ -244,7 +320,7 @@ The leaf certificate must match the public key in the configured KMS key version
 - all required Google Cloud signing inputs are present; and
 - the required certificate secrets are present.
 
-If none of the required Google Cloud signing inputs or secrets are present, the Windows build continues unsigned. This keeps forks without signing configuration usable. If only part of the signing configuration is present, the workflow fails so misconfigured production repositories do not silently publish unsigned installers.
+If none of the required Google Cloud repository variables are present, the Windows build continues unsigned. This keeps forks without signing configuration usable, even if public certificate secrets are present. If only part of the Google Cloud repository variable configuration is present, or if those variables are present but required certificate secrets are missing, the workflow fails so misconfigured production repositories do not silently publish unsigned installers.
 
 The workflow signs the final NSIS installer at:
 
@@ -339,6 +415,7 @@ If the renewed certificate reuses the same KMS key version, the KMS resource nam
 | Symptom | Checks |
 | --- | --- |
 | OIDC authentication fails | Confirm `id-token: write`, the exact provider resource name, repository spelling and case, and the provider attribute condition. Allow several minutes after IAM changes. |
+| Windows signing configuration is incomplete and missing repository variables | Add all four `GCP_CODE_SIGNING_*` repository variables, or run the workflow with `sign-distribution: false` for an unsigned fork build. |
 | KMS permission is denied | Confirm the service account has `roles/cloudkms.signerVerifier` on the correct key and that the configured key version is enabled. |
 | Service-account impersonation is denied | Confirm the caller repository has a `roles/iam.workloadIdentityUser` binding on the service account using `principalSet://.../attribute.repository/OWNER/REPO`. |
 | CNG provider or key container is not found | Confirm the MSI installed successfully, `C:\Windows\KMSCNG\config.yaml` exists, and it contains the full key-version resource. |

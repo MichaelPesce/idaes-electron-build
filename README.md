@@ -30,6 +30,9 @@ gh workflow run .github/workflows/build-dispatch.yml -f project=prommis -f os-ve
 ```
 
 These commands will initiate a windows deployment. For mac, use os-version=macos-latest. For a complete set of input options, see below:
+
+Windows code signing uses Google Cloud KMS. Setup and rotation instructions are in [docs/windows-code-signing-google-cloud-kms.md](docs/windows-code-signing-google-cloud-kms.md).
+
 - project
   - type: choice
   - options:

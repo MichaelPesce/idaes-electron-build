@@ -188,6 +188,9 @@ jobs:
     needs: prepare
     uses: ./.github/workflows/electron-build.yml
     name: ${{ inputs.project }}
+    permissions:
+      contents: read
+      id-token: write
     with:
       os: ${{ needs.prepare.outputs.os }}
       os-version: ${{ inputs.os-version }}
@@ -199,4 +202,10 @@ jobs:
       package-build-number: ${{ inputs.package-build-number }}
       project-version: ${{ inputs.project-version }}
       sign-distribution: ${{ inputs.sign-distribution }}
+      gcp-code-signing-project-id: ${{ vars.GCP_CODE_SIGNING_PROJECT_ID }}
+      gcp-code-signing-workload-identity-provider: ${{ vars.GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER }}
+      gcp-code-signing-service-account: ${{ vars.GCP_CODE_SIGNING_SERVICE_ACCOUNT }}
+      gcp-code-signing-kms-key-version: ${{ vars.GCP_CODE_SIGNING_KMS_KEY_VERSION }}
+      google-kms-cng-version: ${{ vars.GOOGLE_KMS_CNG_VERSION || '1.4' }}
+      windows-signing-timestamp-url: ${{ vars.WINDOWS_SIGNING_TIMESTAMP_URL || 'http://timestamp.digicert.com' }}
     secrets: inherit

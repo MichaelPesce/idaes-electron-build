@@ -4,6 +4,7 @@ dist/
 py_dist/
 .DS_Store
 __pycache__
+gha-creds-*.json
 idaes-flowsheet-processor-ui/
 node_modules/
 package.json

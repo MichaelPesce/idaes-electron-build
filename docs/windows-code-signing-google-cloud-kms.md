@@ -200,6 +200,8 @@ For different rules per repository, use an explicit OR expression:
 
 Set these repository variables in every repository that is allowed to sign. A main repository and a fork can use the same values or different values, depending on the Google Cloud setup chosen above.
 
+These four `GCP_CODE_SIGNING_*` values are Google Cloud resource identifiers, not private credentials. Repository variables are preferred because they are easier to inspect and rotate. The reusable workflow also accepts the same four names as repository or environment secrets for compatibility, but do not mix variables and secrets unless you are intentionally overriding one value.
+
 | GitHub variable | Contents |
 | --- | --- |
 | `GCP_CODE_SIGNING_PROJECT_ID` | Google Cloud project ID |
@@ -208,6 +210,17 @@ Set these repository variables in every repository that is allowed to sign. A ma
 | `GCP_CODE_SIGNING_KMS_KEY_VERSION` | Full KMS key-version resource name |
 | `GOOGLE_KMS_CNG_VERSION` | Optional CNG Provider version, default `1.4` |
 | `WINDOWS_SIGNING_TIMESTAMP_URL` | Optional timestamp URL, default `http://timestamp.digicert.com` |
+
+If these identifiers are stored as secrets instead of variables, use the same names:
+
+```text
+GCP_CODE_SIGNING_PROJECT_ID
+GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER
+GCP_CODE_SIGNING_SERVICE_ACCOUNT
+GCP_CODE_SIGNING_KMS_KEY_VERSION
+```
+
+The workflow reads variables first through reusable-workflow inputs, then falls back to secrets with the same names.
 
 If the Google Cloud resources already exist and you only need to fill in the GitHub variables, start with the project ID:
 
@@ -415,7 +428,7 @@ If the renewed certificate reuses the same KMS key version, the KMS resource nam
 | Symptom | Checks |
 | --- | --- |
 | OIDC authentication fails | Confirm `id-token: write`, the exact provider resource name, repository spelling and case, and the provider attribute condition. Allow several minutes after IAM changes. |
-| Windows signing configuration is incomplete and missing repository variables | Add all four `GCP_CODE_SIGNING_*` repository variables, or run the workflow with `sign-distribution: false` for an unsigned fork build. |
+| Windows signing configuration is incomplete and missing repository variables | Add all four `GCP_CODE_SIGNING_*` repository variables, add matching repository secrets, or run the workflow with `sign-distribution: false` for an unsigned fork build. |
 | KMS permission is denied | Confirm the service account has `roles/cloudkms.signerVerifier` on the correct key and that the configured key version is enabled. |
 | Service-account impersonation is denied | Confirm the caller repository has a `roles/iam.workloadIdentityUser` binding on the service account using `principalSet://.../attribute.repository/OWNER/REPO`. |
 | CNG provider or key container is not found | Confirm the MSI installed successfully, `C:\Windows\KMSCNG\config.yaml` exists, and it contains the full key-version resource. |

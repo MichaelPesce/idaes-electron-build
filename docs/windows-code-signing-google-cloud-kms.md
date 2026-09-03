@@ -335,6 +335,8 @@ The leaf certificate must match the public key in the configured KMS key version
 
 If none of the required Google Cloud repository variables are present, the Windows build continues unsigned. This keeps forks without signing configuration usable, even if public certificate secrets are present. If only part of the Google Cloud repository variable configuration is present, or if those variables are present but required certificate secrets are missing, the workflow fails so misconfigured production repositories do not silently publish unsigned installers.
 
+To fail fast, the workflow checks signing configuration, decodes certificate files, installs the CNG Provider, writes `C:\Windows\KMSCNG\config.yaml`, and installs intermediate certificates immediately after checkout and before the application build. The `google-github-actions/auth` step stays after the installer build and immediately before signing so short-lived OIDC-derived credentials are fresh when SignTool needs them.
+
 The workflow signs the final NSIS installer at:
 
 ```text
@@ -344,7 +346,7 @@ electron/dist/<artifact-name>_<build-number>_win64.exe
 The signing steps:
 
 1. Decode the public certificate files into `RUNNER_TEMP`.
-2. Download and install the configured Google Cloud KMS CNG Provider release.
+2. Download and install the configured Google Cloud KMS CNG Provider release. The workflow supports both older direct `.msi` assets and the current `windows-amd64.zip` assets that contain `kmscng.msi`.
 3. Write `C:\Windows\KMSCNG\config.yaml` with the pinned KMS key version.
 4. Install the intermediate certificates into the current user's `CA` certificate store.
 5. Authenticate to Google Cloud with `google-github-actions/auth`.
@@ -432,6 +434,7 @@ If the renewed certificate reuses the same KMS key version, the KMS resource nam
 | KMS permission is denied | Confirm the service account has `roles/cloudkms.signerVerifier` on the correct key and that the configured key version is enabled. |
 | Service-account impersonation is denied | Confirm the caller repository has a `roles/iam.workloadIdentityUser` binding on the service account using `principalSet://.../attribute.repository/OWNER/REPO`. |
 | CNG provider or key container is not found | Confirm the MSI installed successfully, `C:\Windows\KMSCNG\config.yaml` exists, and it contains the full key-version resource. |
+| Expected one MSI in CNG release and found 0 | Use a workflow version that supports the current `kmscng-<version>-windows-amd64.zip` release asset format, or set `GOOGLE_KMS_CNG_VERSION` to a release that publishes a direct MSI asset. |
 | SignTool reports a certificate/private-key mismatch | The leaf `.cer` belongs to a different public key or KMS key version. Recheck the certificate against the CSR and key version. |
 | Certificate chain is incomplete | Install every CA-supplied intermediate into the current user's `CA` store and verify again. |
 | Signature succeeds but timestamping fails | Confirm outbound access to the timestamp service and use `/tr` with `/td SHA256`. Do not publish an untimestamped release. |

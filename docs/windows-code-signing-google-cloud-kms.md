@@ -233,7 +233,9 @@ The leaf certificate must match the public key in the configured KMS key version
 
 ## 3. Workflow behavior
 
-`build-dispatch.yml` passes repository variables into the reusable `electron-build.yml` workflow and uses `secrets: inherit`.
+`build-dispatch.yml` grants `id-token: write`, passes repository variables into the reusable `electron-build.yml` workflow, and uses `secrets: inherit`.
+
+`test-electron-build.yml` is a pull-request workflow and explicitly passes `sign-distribution: false`. Do not grant `id-token: write` to pull-request builds that execute untrusted code.
 
 `electron-build.yml` signs only when all of these are true:
 
@@ -268,7 +270,7 @@ gha-creds-*.json
 
 ## 4. Calling the reusable workflow directly
 
-When another workflow calls `electron-build.yml`, pass the same inputs and secrets. The caller must grant `id-token: write`; the called workflow should not be treated as a way to bypass caller-side permissions.
+When another workflow calls `electron-build.yml` for signing, pass the same inputs and secrets. The caller must grant `id-token: write`; the called workflow should not be treated as a way to bypass caller-side permissions.
 
 ```yaml
 jobs:

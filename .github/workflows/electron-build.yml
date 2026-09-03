@@ -80,9 +80,6 @@ jobs:
   electron-build:
     name: ${{ inputs.os-version }}/Python${{inputs.python-version}}
     runs-on: ${{ inputs.os-version }}
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3

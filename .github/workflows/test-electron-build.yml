@@ -23,6 +23,8 @@ jobs:
                   artifact-name: IDAES-Flowsheet-Processor
 
     name: ${{ matrix.project }} 
+    permissions:
+        contents: read
     uses: ./.github/workflows/electron-build.yml
     with:
         project: ${{ matrix.project }}
@@ -32,4 +34,5 @@ jobs:
         idaes-flowsheet-processor-ui-ref: main
         os-version: ${{ matrix.os-version }}
         python-version: ${{matrix.python-version}}
+        sign-distribution: false
     secrets: inherit

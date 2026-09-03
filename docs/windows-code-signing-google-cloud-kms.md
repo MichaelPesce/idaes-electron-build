@@ -66,7 +66,7 @@ When a reusable workflow is used, the GitHub OIDC `repository` claim identifies 
 
 ## 1. Configure Google Cloud access
 
-Run these commands once from macOS, Linux, or Cloud Shell.
+Run these commands once from macOS, Linux, or Cloud Shell. Replace every example value before running the commands; values such as `my-code-signing-project`, `my-org/main-repo`, and `trusted-user/fork-repo` are placeholders.
 
 ```bash
 export PROJECT_ID="my-code-signing-project"
@@ -222,7 +222,7 @@ GCP_CODE_SIGNING_KMS_KEY_VERSION
 
 The workflow reads variables first through reusable-workflow inputs, then falls back to secrets with the same names.
 
-If the Google Cloud resources already exist and you only need to fill in the GitHub variables, start with the project ID:
+If the Google Cloud resources already exist and you only need to fill in the GitHub variables, start with the project ID. This must be the project ID, not the project number from the Workload Identity Provider resource name:
 
 ```bash
 export PROJECT_ID="my-code-signing-project"
@@ -335,7 +335,7 @@ The leaf certificate must match the public key in the configured KMS key version
 
 If none of the required Google Cloud repository variables are present, the Windows build continues unsigned. This keeps forks without signing configuration usable, even if public certificate secrets are present. If only part of the Google Cloud repository variable configuration is present, or if those variables are present but required certificate secrets are missing, the workflow fails so misconfigured production repositories do not silently publish unsigned installers.
 
-To fail fast, the workflow checks signing configuration, decodes certificate files, installs the CNG Provider, writes `C:\Windows\KMSCNG\config.yaml`, and installs intermediate certificates immediately after checkout and before the application build. The `google-github-actions/auth` step stays after the installer build and immediately before signing so short-lived OIDC-derived credentials are fresh when SignTool needs them.
+To fail fast, the workflow checks signing configuration, validates service-account impersonation, validates KMS public-key access, decodes certificate files, installs the CNG Provider, writes `C:\Windows\KMSCNG\config.yaml`, and installs intermediate certificates immediately after checkout and before the application build. The final `google-github-actions/auth` step stays after the installer build and immediately before signing so short-lived OIDC-derived credentials are fresh when SignTool needs them.
 
 The workflow signs the final NSIS installer at:
 
@@ -345,13 +345,17 @@ electron/dist/<artifact-name>_<build-number>_win64.exe
 
 The signing steps:
 
-1. Decode the public certificate files into `RUNNER_TEMP`.
-2. Download and install the configured Google Cloud KMS CNG Provider release. The workflow supports both older direct `.msi` assets and the current `windows-amd64.zip` assets that contain `kmscng.msi`.
-3. Write `C:\Windows\KMSCNG\config.yaml` with the pinned KMS key version.
-4. Install the intermediate certificates into the current user's `CA` certificate store.
-5. Authenticate to Google Cloud with `google-github-actions/auth`.
-6. Run `signtool sign` with `/csp "Google Cloud KMS Provider"` and `/kc <full key version>`.
-7. Run `signtool verify` before uploading the artifact.
+1. Check the signing configuration.
+2. Run an early Google Cloud authentication preflight.
+3. Confirm the configured service account can read the KMS key version's public key.
+4. Decode the public certificate files into `RUNNER_TEMP`.
+5. Download and install the configured Google Cloud KMS CNG Provider release. The workflow supports both older direct `.msi` assets and the current `windows-amd64.zip` assets that contain `kmscng.msi`.
+6. Write `C:\Windows\KMSCNG\config.yaml` with the pinned KMS key version.
+7. Install the intermediate certificates into the current user's `CA` certificate store.
+8. Build the installer.
+9. Re-authenticate to Google Cloud with `google-github-actions/auth`.
+10. Run `signtool sign` with `/csp "Google Cloud KMS Provider"` and `/kc <full key version>`.
+11. Run `signtool verify` before uploading the artifact.
 
 Because `google-github-actions/auth` creates temporary `gha-creds-*.json` files in the workspace, `.gitignore` must include:
 
@@ -431,6 +435,7 @@ If the renewed certificate reuses the same KMS key version, the KMS resource nam
 | --- | --- |
 | OIDC authentication fails | Confirm `id-token: write`, the exact provider resource name, repository spelling and case, and the provider attribute condition. Allow several minutes after IAM changes. |
 | Windows signing configuration is incomplete and missing repository variables | Add all four `GCP_CODE_SIGNING_*` repository variables, add matching repository secrets, or run the workflow with `sign-distribution: false` for an unsigned fork build. |
+| Permission `iam.serviceAccounts.getAccessToken` denied | Confirm the service account has a `roles/iam.workloadIdentityUser` binding for the exact caller repository and that the Workload Identity Provider condition allows that repository. |
 | KMS permission is denied | Confirm the service account has `roles/cloudkms.signerVerifier` on the correct key and that the configured key version is enabled. |
 | Service-account impersonation is denied | Confirm the caller repository has a `roles/iam.workloadIdentityUser` binding on the service account using `principalSet://.../attribute.repository/OWNER/REPO`. |
 | CNG provider or key container is not found | Confirm the MSI installed successfully, `C:\Windows\KMSCNG\config.yaml` exists, and it contains the full key-version resource. |

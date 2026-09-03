@@ -147,6 +147,39 @@ jobs:
 
           Add-Content -Path $env:GITHUB_OUTPUT -Value 'enabled=true'
 
+      - name: Preflight Google Cloud authentication
+        id: google-auth-preflight
+        if: steps.windows-signing.outputs.enabled == 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ inputs.gcp-code-signing-project-id || secrets.GCP_CODE_SIGNING_PROJECT_ID }}
+          workload_identity_provider: ${{ inputs.gcp-code-signing-workload-identity-provider || secrets.GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ inputs.gcp-code-signing-service-account || secrets.GCP_CODE_SIGNING_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_lifetime: 300s
+          create_credentials_file: false
+          export_environment_variables: false
+
+      - name: Preflight Google Cloud KMS access
+        if: steps.windows-signing.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          GCP_KMS_KEY_VERSION: ${{ inputs.gcp-code-signing-kms-key-version || secrets.GCP_CODE_SIGNING_KMS_KEY_VERSION }}
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google-auth-preflight.outputs.access_token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          if ([string]::IsNullOrWhiteSpace($env:GOOGLE_ACCESS_TOKEN)) {
+            throw 'Google Cloud authentication preflight did not return an access token.'
+          }
+
+          $headers = @{
+            Authorization = "Bearer $env:GOOGLE_ACCESS_TOKEN"
+          }
+          $publicKeyUri = "https://cloudkms.googleapis.com/v1/$env:GCP_KMS_KEY_VERSION/publicKey"
+
+          Invoke-RestMethod -Method Get -Uri $publicKeyUri -Headers $headers | Out-Null
+
       - name: Decode code-signing certificates
         if: steps.windows-signing.outputs.enabled == 'true'
         shell: pwsh

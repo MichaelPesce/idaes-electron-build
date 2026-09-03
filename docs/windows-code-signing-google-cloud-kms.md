@@ -337,8 +337,6 @@ If none of the required Google Cloud repository variables are present, the Windo
 
 To fail fast, the workflow checks signing configuration, validates service-account impersonation, validates KMS public-key access, decodes certificate files, installs the CNG Provider, writes `C:\Windows\KMSCNG\config.yaml`, and installs intermediate certificates immediately after checkout and before the application build. The final `google-github-actions/auth` step stays after the installer build and immediately before signing so short-lived OIDC-derived credentials are fresh when SignTool needs them.
 
-When signing is enabled, the workflow logs a `Debug Windows signing identity` step before authentication. It prints the caller repository/ref, whether each Google Cloud setting came from a variable/input or secret fallback, the parsed Workload Identity Provider, the parsed KMS key version, and the exact service-account IAM member string that should appear in Google Cloud.
-
 The workflow signs the final NSIS installer at:
 
 ```text
@@ -437,7 +435,7 @@ If the renewed certificate reuses the same KMS key version, the KMS resource nam
 | --- | --- |
 | OIDC authentication fails | Confirm `id-token: write`, the exact provider resource name, repository spelling and case, and the provider attribute condition. Allow several minutes after IAM changes. |
 | Windows signing configuration is incomplete and missing repository variables | Add all four `GCP_CODE_SIGNING_*` repository variables, add matching repository secrets, or run the workflow with `sign-distribution: false` for an unsigned fork build. |
-| Permission `iam.serviceAccounts.getAccessToken` denied | Confirm the service account has a `roles/iam.workloadIdentityUser` binding for the exact caller repository and that the Workload Identity Provider condition allows that repository. The workflow logs `Windows signing caller repository`; use that exact `OWNER/REPO` string in both places. |
+| Permission `iam.serviceAccounts.getAccessToken` denied | Confirm the service account has a `roles/iam.workloadIdentityUser` binding for the exact caller repository and that the Workload Identity Provider condition allows that repository. Use the GitHub repository name in `OWNER/REPO` form exactly as GitHub reports it. |
 | KMS permission is denied | Confirm the service account has `roles/cloudkms.signerVerifier` on the correct key and that the configured key version is enabled. |
 | Service-account impersonation is denied | Confirm the caller repository has a `roles/iam.workloadIdentityUser` binding on the service account using `principalSet://.../attribute.repository/OWNER/REPO`. |
 | CNG provider or key container is not found | Confirm the MSI installed successfully, `C:\Windows\KMSCNG\config.yaml` exists, and it contains the full key-version resource. |

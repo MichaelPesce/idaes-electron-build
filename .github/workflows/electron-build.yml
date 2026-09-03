@@ -46,8 +46,6 @@ on:
       windows-signing-timestamp-url:
         type: string
         default: 'http://timestamp.digicert.com'
-      os:
-        type: string
       python-version:
         type: number
         default: 3.13
@@ -86,7 +84,7 @@ defaults:
 
 jobs:
   electron-build:
-    name: ${{ inputs.os-version }}/Python${{inputs.python-version}}
+    name: ${{ inputs.os-version }}/Python${{ inputs.python-version }}
     runs-on: ${{ inputs.os-version }}
     steps:
       - uses: actions/checkout@v4
@@ -102,13 +100,8 @@ jobs:
           GCP_KMS_KEY_VERSION: ${{ inputs.gcp-code-signing-kms-key-version || secrets.GCP_CODE_SIGNING_KMS_KEY_VERSION }}
           LEAF_BASE64: ${{ secrets.GCP_CODE_SIGNING_CERTIFICATE_BASE64 }}
           INTERMEDIATE_1_BASE64: ${{ secrets.GCP_CODE_SIGNING_INTERMEDIATE_1_BASE64 }}
-          CALLER_REPOSITORY: ${{ github.repository }}
-          CALLER_REF: ${{ github.ref }}
         run: |
           $ErrorActionPreference = 'Stop'
-
-          Write-Host "Windows signing caller repository: $env:CALLER_REPOSITORY"
-          Write-Host "Windows signing caller ref: $env:CALLER_REF"
 
           $requiredVariables = [ordered]@{
             'gcp-code-signing-project-id' = $env:GCP_PROJECT_ID
@@ -151,101 +144,6 @@ jobs:
           }
 
           Add-Content -Path $env:GITHUB_OUTPUT -Value 'enabled=true'
-
-      - name: Debug Windows signing identity
-        if: steps.windows-signing.outputs.enabled == 'true'
-        shell: pwsh
-        env:
-          CALLER_REPOSITORY: ${{ github.repository }}
-          CALLER_REPOSITORY_OWNER: ${{ github.repository_owner }}
-          CALLER_REF: ${{ github.ref }}
-          CALLER_REF_NAME: ${{ github.ref_name }}
-          CALLER_REF_TYPE: ${{ github.ref_type }}
-          CALLER_WORKFLOW_REF: ${{ github.workflow_ref }}
-          CALLER_WORKFLOW_SHA: ${{ github.workflow_sha }}
-          CALLER_EVENT_NAME: ${{ github.event_name }}
-          GCP_PROJECT_ID_INPUT: ${{ inputs.gcp-code-signing-project-id }}
-          GCP_PROJECT_ID_SECRET: ${{ secrets.GCP_CODE_SIGNING_PROJECT_ID }}
-          GCP_WORKLOAD_IDENTITY_PROVIDER_INPUT: ${{ inputs.gcp-code-signing-workload-identity-provider }}
-          GCP_WORKLOAD_IDENTITY_PROVIDER_SECRET: ${{ secrets.GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER }}
-          GCP_SERVICE_ACCOUNT_INPUT: ${{ inputs.gcp-code-signing-service-account }}
-          GCP_SERVICE_ACCOUNT_SECRET: ${{ secrets.GCP_CODE_SIGNING_SERVICE_ACCOUNT }}
-          GCP_KMS_KEY_VERSION_INPUT: ${{ inputs.gcp-code-signing-kms-key-version }}
-          GCP_KMS_KEY_VERSION_SECRET: ${{ secrets.GCP_CODE_SIGNING_KMS_KEY_VERSION }}
-          GCP_PROJECT_ID: ${{ inputs.gcp-code-signing-project-id || secrets.GCP_CODE_SIGNING_PROJECT_ID }}
-          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ inputs.gcp-code-signing-workload-identity-provider || secrets.GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER }}
-          GCP_SERVICE_ACCOUNT: ${{ inputs.gcp-code-signing-service-account || secrets.GCP_CODE_SIGNING_SERVICE_ACCOUNT }}
-          GCP_KMS_KEY_VERSION: ${{ inputs.gcp-code-signing-kms-key-version || secrets.GCP_CODE_SIGNING_KMS_KEY_VERSION }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          function Get-ConfigSource {
-            param(
-              [string]$InputValue,
-              [string]$SecretValue
-            )
-            if (-not [string]::IsNullOrWhiteSpace($InputValue)) {
-              return 'input/variable'
-            }
-            if (-not [string]::IsNullOrWhiteSpace($SecretValue)) {
-              return 'secret fallback'
-            }
-            return 'missing'
-          }
-
-          Write-Host 'Windows signing debug context'
-          Write-Host "  GitHub repository: $env:CALLER_REPOSITORY"
-          Write-Host "  GitHub repository owner: $env:CALLER_REPOSITORY_OWNER"
-          Write-Host "  GitHub ref: $env:CALLER_REF"
-          Write-Host "  GitHub ref name: $env:CALLER_REF_NAME"
-          Write-Host "  GitHub ref type: $env:CALLER_REF_TYPE"
-          Write-Host "  GitHub workflow ref: $env:CALLER_WORKFLOW_REF"
-          Write-Host "  GitHub workflow sha: $env:CALLER_WORKFLOW_SHA"
-          Write-Host "  GitHub event name: $env:CALLER_EVENT_NAME"
-
-          Write-Host 'Google Cloud signing configuration'
-          Write-Host "  Project ID source: $(Get-ConfigSource $env:GCP_PROJECT_ID_INPUT $env:GCP_PROJECT_ID_SECRET)"
-          Write-Host "  WIF provider source: $(Get-ConfigSource $env:GCP_WORKLOAD_IDENTITY_PROVIDER_INPUT $env:GCP_WORKLOAD_IDENTITY_PROVIDER_SECRET)"
-          Write-Host "  Service account source: $(Get-ConfigSource $env:GCP_SERVICE_ACCOUNT_INPUT $env:GCP_SERVICE_ACCOUNT_SECRET)"
-          Write-Host "  KMS key version source: $(Get-ConfigSource $env:GCP_KMS_KEY_VERSION_INPUT $env:GCP_KMS_KEY_VERSION_SECRET)"
-          Write-Host "  Project ID value: $env:GCP_PROJECT_ID"
-          Write-Host "  WIF provider value: $env:GCP_WORKLOAD_IDENTITY_PROVIDER"
-          Write-Host "  Service account value: $env:GCP_SERVICE_ACCOUNT"
-          Write-Host "  KMS key version value: $env:GCP_KMS_KEY_VERSION"
-
-          $providerMatch = [regex]::Match(
-            $env:GCP_WORKLOAD_IDENTITY_PROVIDER,
-            '^projects/(?<projectNumber>[^/]+)/locations/(?<location>[^/]+)/workloadIdentityPools/(?<pool>[^/]+)/providers/(?<provider>[^/]+)$'
-          )
-
-          if ($providerMatch.Success) {
-            $poolResource = "projects/$($providerMatch.Groups['projectNumber'].Value)/locations/$($providerMatch.Groups['location'].Value)/workloadIdentityPools/$($providerMatch.Groups['pool'].Value)"
-            $expectedMember = "principalSet://iam.googleapis.com/$poolResource/attribute.repository/$env:CALLER_REPOSITORY"
-            Write-Host 'Parsed Workload Identity Provider'
-            Write-Host "  Project number: $($providerMatch.Groups['projectNumber'].Value)"
-            Write-Host "  Location: $($providerMatch.Groups['location'].Value)"
-            Write-Host "  Pool ID: $($providerMatch.Groups['pool'].Value)"
-            Write-Host "  Provider ID: $($providerMatch.Groups['provider'].Value)"
-            Write-Host "  Expected service account IAM member: $expectedMember"
-          } else {
-            Write-Host 'Could not parse GCP_WORKLOAD_IDENTITY_PROVIDER. Expected projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID.'
-          }
-
-          $kmsMatch = [regex]::Match(
-            $env:GCP_KMS_KEY_VERSION,
-            '^projects/(?<project>[^/]+)/locations/(?<location>[^/]+)/keyRings/(?<keyring>[^/]+)/cryptoKeys/(?<key>[^/]+)/cryptoKeyVersions/(?<version>[^/]+)$'
-          )
-
-          if ($kmsMatch.Success) {
-            Write-Host 'Parsed KMS key version'
-            Write-Host "  Project ID: $($kmsMatch.Groups['project'].Value)"
-            Write-Host "  Location: $($kmsMatch.Groups['location'].Value)"
-            Write-Host "  Key ring: $($kmsMatch.Groups['keyring'].Value)"
-            Write-Host "  Key: $($kmsMatch.Groups['key'].Value)"
-            Write-Host "  Version: $($kmsMatch.Groups['version'].Value)"
-          } else {
-            Write-Host 'Could not parse GCP_KMS_KEY_VERSION. Expected projects/PROJECT_ID/locations/LOCATION/keyRings/KEYRING/cryptoKeys/KEY/cryptoKeyVersions/VERSION.'
-          }
 
       - name: Preflight Google Cloud authentication
         id: google-auth-preflight
@@ -428,143 +326,143 @@ jobs:
           conda install -c conda-forge nodejs=20.9.0 -y
           pip install -r pyinstaller/requirements.txt
 
-      - name: Get email of workflow initiator
+      - name: Resolve workflow author
         id: get-author
         run: |
-          echo "EMAIL=${{ github.event.pusher.email }}" >> $GITHUB_OUTPUT
-          echo "AUTHOR=${{ github.actor }} <${{ github.event.pusher.email }}>" >> $GITHUB_OUTPUT
-    
-        ## handle linux-only actions
-      - name: Install linux packages
+          echo "AUTHOR=${{ github.actor }} <${{ github.event.pusher.email }}>" >> "$GITHUB_OUTPUT"
+
+      - name: Install Linux packaging dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y ruby-dev build-essential libgfortran5 liblapack3 libgomp1 libblas3
           sudo gem install --no-document fpm
+          echo "USE_SYSTEM_FPM=true" >> "$GITHUB_ENV"
 
-      - name: Set environment variable
-        if: runner.os == 'Linux'
-        run: |
-          echo "USE_SYSTEM_FPM=true" >> $GITHUB_ENV
-      
-        ## handle Apple certificate, keychain setup for mac builds
-      - name: Install the Apple certificate
+      - name: Install Apple signing certificate
         if: runner.os == 'macOS' && inputs.sign-distribution && env.BUILD_CERTIFICATE_BASE64 != '' && env.P12_PASSWORD != '' && env.KEYCHAIN_PASSWORD != ''
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # create variables
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
 
-          # import certificate from secrets
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
 
-          # create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # import certificate to keychain
-          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+          security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
 
-        ## use this for naming package
-      - name: Generate Package Build Number
+      - name: Resolve package build number
         id: generate-build-number
         run: |
           if [ -z "${{ inputs.package-build-number }}" ]; then
-            echo "build-number=$(date +'%y.%m.%d')" >> $GITHUB_OUTPUT
+            echo "build-number=$(date +'%y.%m.%d')" >> "$GITHUB_OUTPUT"
           else
-            echo "build-number=${{ inputs.package-build-number }}" >> $GITHUB_OUTPUT
+            echo "build-number=${{ inputs.package-build-number }}" >> "$GITHUB_OUTPUT"
           fi
 
-        ## Generate os name, file extension based on os-version
-      - name: Generate os name, file extension
+      - name: Resolve artifact platform values
         id: os-specific-values
         run: |
           if [ "${{ inputs.os-version }}" == "windows-latest" ]; then
-            echo "os=win64" >> $GITHUB_OUTPUT
-            echo "artifact-file-extension=exe" >> $GITHUB_OUTPUT
+            echo "os=win64" >> "$GITHUB_OUTPUT"
+            echo "artifact-file-extension=exe" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.os-version }}" == "ubuntu-22.04" ]; then
-            echo "os=amd64" >> $GITHUB_OUTPUT
-            echo "artifact-file-extension=deb" >> $GITHUB_OUTPUT
+            echo "os=amd64" >> "$GITHUB_OUTPUT"
+            echo "artifact-file-extension=deb" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.os-version }}" == "macos-latest" ]; then
-            echo "os=arm64" >> $GITHUB_OUTPUT
-            echo "artifact-file-extension=dmg" >> $GITHUB_OUTPUT
+            echo "os=arm64" >> "$GITHUB_OUTPUT"
+            echo "artifact-file-extension=dmg" >> "$GITHUB_OUTPUT"
           fi
 
-        ## set full path for artifact (useful to define here because it is referenced multiple times later)
       - name: Set artifact path
         id: artifact-path
-        run: echo "path=electron/dist/${{ inputs.artifact-name }}_${{ steps.generate-build-number.outputs.build-number }}_${{ steps.os-specific-values.outputs.os }}.${{ steps.os-specific-values.outputs.artifact-file-extension }}" >> $GITHUB_OUTPUT
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILD_NUMBER: ${{ steps.generate-build-number.outputs.build-number }}
+          ARTIFACT_OS: ${{ steps.os-specific-values.outputs.os }}
+          ARTIFACT_EXTENSION: ${{ steps.os-specific-values.outputs.artifact-file-extension }}
+        run: |
+          artifact_path="electron/dist/${ARTIFACT_NAME}_${BUILD_NUMBER}_${ARTIFACT_OS}.${ARTIFACT_EXTENSION}"
+          echo "path=$artifact_path" >> "$GITHUB_OUTPUT"
 
       - name: Install IDAES Flowsheet Processor UI locally
         working-directory: ./electron
-        run: git clone https://github.com/${{ inputs.idaes-flowsheet-processor-ui-repo }}.git && cd idaes-flowsheet-processor-ui && git fetch --all --tags && git checkout ${{ inputs.idaes-flowsheet-processor-ui-ref }} && pip install --progress-bar off .
+        env:
+          IFP_UI_REPO: ${{ inputs.idaes-flowsheet-processor-ui-repo }}
+          IFP_UI_REF: ${{ inputs.idaes-flowsheet-processor-ui-ref }}
+        run: |
+          git clone "https://github.com/${IFP_UI_REPO}.git"
+          cd idaes-flowsheet-processor-ui
+          git fetch --all --tags
+          git checkout "$IFP_UI_REF"
+          pip install --progress-bar off .
 
       - name: Pip install ${{ inputs.pip-install-target }}
-        run: pip install --progress-bar off ${{ inputs.pip-install-target }}
+        env:
+          PIP_INSTALL_TARGET: ${{ inputs.pip-install-target }}
+        run: pip install --progress-bar off "$PIP_INSTALL_TARGET"
 
-      - name: Install Jaraco
+      - name: Install jaraco.text
         run: pip install --progress-bar off jaraco.text
 
-        ## creates package.json and .env files
       - name: Set configuration files
+        env:
+          PROJECT: ${{ inputs.project }}
+          BUILD_NUMBER: ${{ steps.generate-build-number.outputs.build-number }}
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          AUTHOR: ${{ steps.get-author.outputs.AUTHOR }}
+          PROJECT_VERSION: ${{ inputs.project-version }}
         run: |
-          cmd="python scripts/set_configuration.py \
-            -p '${{ inputs.project }}' \
-            -bv '${{ steps.generate-build-number.outputs.build-number }}' \
-            -a '${{ inputs.artifact-name }}' \
-            -au '${{ steps.get-author.outputs.AUTHOR }}'"
+          cmd=(
+            python scripts/set_configuration.py
+            -p "$PROJECT"
+            -bv "$BUILD_NUMBER"
+            -a "$ARTIFACT_NAME"
+            -au "$AUTHOR"
+          )
 
-          if [ -n "${{ inputs.project-version }}" ]; then
-            cmd="$cmd -pv '${{ inputs.project-version }}'"
+          if [ -n "$PROJECT_VERSION" ]; then
+            cmd+=(-pv "$PROJECT_VERSION")
           fi
 
-          echo "Running: $cmd"
-          eval "$cmd"
+          "${cmd[@]}"
 
-      - name: Install Electron JS dependencies
+      - name: Install Electron dependencies
         working-directory: ./electron
-        run:  npm install
+        run: npm install
 
-      - name: Install frontend JS dependencies
-        working-directory: ./electron/idaes-flowsheet-processor-ui/frontend 
+      - name: Install frontend dependencies
+        working-directory: ./electron/idaes-flowsheet-processor-ui/frontend
         run: npm clean-install
 
       - name: Get idaes extensions
         run: idaes get-extensions
 
-      # - name: Install numpy 2.2.6
-      #   run: pip install numpy==2.2.6
-
-      # - name: Install scipy 1.15.3
-      #   run: pip install scipy==1.15.3
-
-      - name: Transfer Entry points
+      - name: Transfer entry points
         working-directory: ./scripts
-        run: |
-          python move_entrypoints.py -p ${{ inputs.project }}
+        env:
+          PROJECT: ${{ inputs.project }}
+        run: python move_entrypoints.py -p "$PROJECT"
 
-      - name: DEBUG - pip freeze
-        run: pip freeze
-
-      - name: Build Backend
+      - name: Build backend
         working-directory: ./pyinstaller
         run: pyinstaller -y --clean --distpath ../electron/py_dist main.spec
 
-      - name: Build Frontend
+      - name: Build frontend
         working-directory: ./electron/idaes-flowsheet-processor-ui/frontend
         env:
           CI: false
         run: npm run build
 
-      ## still not sure why this is necessary
-      - name: For linux, remove ico files
+      - name: Remove ico files before Linux packaging
         if: runner.os == 'Linux'
         working-directory: ./scripts
         run: |
@@ -626,7 +524,6 @@ jobs:
 
           & $signTool sign `
             /v `
-            /debug `
             /fd SHA256 `
             /tr $env:TIMESTAMP_URL `
             /td SHA256 `
@@ -648,5 +545,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: success()
         with:
-            name: ${{ inputs.project }}-${{ steps.os-specific-values.outputs.os }}-${{ inputs.python-version }}-dist
-            path: ${{ steps.artifact-path.outputs.path }}
+          name: ${{ inputs.project }}-${{ steps.os-specific-values.outputs.os }}-${{ inputs.python-version }}-dist
+          path: ${{ steps.artifact-path.outputs.path }}

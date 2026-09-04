@@ -351,7 +351,7 @@ The signing steps:
 2. Parse the full KMS key-version resource into the Jsign `--keystore` and `--alias` values.
 3. Run an early Google Cloud authentication preflight.
 4. Confirm the configured service account can read the KMS key version's public key.
-5. Decode the public certificate files into `RUNNER_TEMP` and create a PEM certificate-chain file for Jsign.
+5. Decode the public certificate files into `RUNNER_TEMP` and create a PKCS#7 `.p7b` certificate-chain file for Jsign.
 6. Set up Java and download the pinned Jsign JAR.
 7. Build the installer.
 8. Re-authenticate to Google Cloud with `google-github-actions/auth`.
@@ -446,7 +446,8 @@ If the renewed certificate reuses the same KMS key version, the KMS resource nam
 | Jsign checksum fails | Update `JSIGN_SHA256` only after intentionally changing `JSIGN_VERSION` and verifying the downloaded JAR out of band. |
 | Jsign cannot find the Google Cloud key | Confirm `GCP_CODE_SIGNING_KMS_KEY_VERSION` is the full key-version resource. The workflow parses it into Jsign `--keystore projects/PROJECT/locations/LOCATION/keyRings/KEYRING` and `--alias KEY/cryptoKeyVersions/VERSION`. |
 | SignTool reports a certificate/private-key mismatch | The leaf `.cer` belongs to a different public key or KMS key version. Recheck the certificate against the CSR and key version. |
-| Certificate chain is incomplete | Confirm every CA-supplied intermediate is stored in GitHub and that the Jsign certificate-chain step reports the expected certificate count. |
+| Jsign fails to load the certificate chain with `extra data at the end` | Use a workflow version that creates a PKCS#7 `.p7b` certificate-chain file instead of concatenating individual certificate files into PEM. |
+| Certificate chain is incomplete | Confirm every CA-supplied intermediate is stored in GitHub and that the Jsign certificate-chain step reports the expected certificate count. The workflow accepts base64-encoded `.cer`, `.pem`, `.p7b`, or `.spc` certificate material and exports the combined chain as `.p7b`. |
 | Signature succeeds but timestamping fails | Confirm outbound access to the timestamp service and use an RFC 3161 timestamp endpoint. Do not publish an untimestamped release. |
 | Installer is signed but the installed app is not | Add signing before packaging for the inner Electron executable and relevant native binaries. |
 

@@ -222,7 +222,13 @@ jobs:
           }
           $publicKeyUri = "https://cloudkms.googleapis.com/v1/$env:GCP_KMS_KEY_VERSION/publicKey"
 
-          Invoke-RestMethod -Method Get -Uri $publicKeyUri -Headers $headers | Out-Null
+          $publicKey = Invoke-RestMethod -Method Get -Uri $publicKeyUri -Headers $headers
+          Write-Host 'Google Cloud KMS public key preflight succeeded.'
+          Write-Host "  Name: $($publicKey.name)"
+          Write-Host "  Algorithm: $($publicKey.algorithm)"
+          if ($publicKey.protectionLevel) {
+            Write-Host "  Protection level: $($publicKey.protectionLevel)"
+          }
 
       - name: Prepare Jsign certificate chain
         if: steps.windows-signing.outputs.enabled == 'true'
@@ -234,12 +240,19 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          function Write-CertificateSecret {
+          function Import-CertificateSecret {
             param(
-              [Parameter(Mandatory = $true)][string]$Name,
-              [Parameter(Mandatory = $true)][string]$Base64Value,
-              [Parameter(Mandatory = $true)][Security.Cryptography.X509Certificates.X509Certificate2Collection]$Destination
+              [string]$Name,
+              [string]$Base64Value
             )
+
+            if ([string]::IsNullOrWhiteSpace($Name)) {
+              throw 'Certificate input name is empty.'
+            }
+
+            if ([string]::IsNullOrWhiteSpace($Base64Value)) {
+              throw "${Name} certificate secret is empty."
+            }
 
             $path = Join-Path $env:RUNNER_TEMP "$Name.cer"
             $normalized = $Base64Value -replace '\s', ''
@@ -247,32 +260,38 @@ jobs:
             try {
               [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($normalized))
             } catch {
-              throw "Failed to decode $Name certificate secret as base64: $($_.Exception.Message)"
+              throw "Failed to decode ${Name} certificate secret as base64: $($_.Exception.Message)"
             }
 
             $certificates = [Security.Cryptography.X509Certificates.X509Certificate2Collection]::new()
+            $importedCertificates = @()
             $bytes = [IO.File]::ReadAllBytes($path)
             $text = [Text.Encoding]::ASCII.GetString($bytes)
+            $detectedFormat = 'DER certificate or DER PKCS#7'
 
             try {
               if ($text -match '-----BEGIN CERTIFICATE-----') {
+                $detectedFormat = 'PEM certificate'
                 $pemCertificates = [regex]::Matches(
                   $text,
                   '-----BEGIN CERTIFICATE-----\s*(?<body>[A-Za-z0-9+/=\r\n]+?)\s*-----END CERTIFICATE-----'
                 )
 
+                if ($pemCertificates.Count -eq 0) {
+                  throw "Found a PEM certificate header in ${Name}, but no complete certificate block."
+                }
+
                 foreach ($pemCertificate in $pemCertificates) {
                   $certificateBytes = [Convert]::FromBase64String(
                     $pemCertificate.Groups['body'].Value -replace '\s', ''
                   )
-                  [void]$certificates.Add(
-                    [Security.Cryptography.X509Certificates.X509Certificate2]::new($certificateBytes)
-                  )
+                  $importedCertificates += [Security.Cryptography.X509Certificates.X509Certificate2]::new($certificateBytes)
                 }
-              } elseif ($text -match '-----BEGIN PKCS7-----') {
+              } elseif ($text -match '-----BEGIN (PKCS7|PKCS #7 SIGNED DATA)-----') {
+                $detectedFormat = 'PEM PKCS#7'
                 $pkcs7 = [regex]::Match(
                   $text,
-                  '-----BEGIN PKCS7-----\s*(?<body>[A-Za-z0-9+/=\r\n]+?)\s*-----END PKCS7-----'
+                  '-----BEGIN (?:PKCS7|PKCS #7 SIGNED DATA)-----\s*(?<body>[A-Za-z0-9+/=\r\n]+?)\s*-----END (?:PKCS7|PKCS #7 SIGNED DATA)-----'
                 )
                 if (-not $pkcs7.Success) {
                   throw "Failed to parse ${Name} PEM PKCS#7 content."
@@ -287,24 +306,46 @@ jobs:
             }
 
             if ($certificates.Count -eq 0) {
-              throw "No certificates were found in ${Name} certificate material."
+              if ($importedCertificates.Count -eq 0) {
+                throw "No certificates were found in ${Name} certificate material."
+              }
+            } else {
+              foreach ($certificate in $certificates) {
+                $importedCertificates += $certificate
+              }
             }
 
-            Write-Host "Imported $($certificates.Count) certificate(s) from ${Name}."
+            Write-Host "${Name} certificate material detected as $detectedFormat; decoded byte length: $($bytes.Length)"
+            Write-Host "Imported $($importedCertificates.Count) certificate(s) from ${Name}."
 
-            foreach ($certificate in $certificates) {
-              [void]$Destination.Add($certificate)
+            foreach ($certificate in $importedCertificates) {
               Write-Host "Certificate ${Name}: subject=$($certificate.Subject); issuer=$($certificate.Issuer); thumbprint=$($certificate.Thumbprint); expires=$($certificate.NotAfter.ToUniversalTime().ToString('u'))"
             }
+
+            return $importedCertificates
           }
 
           $allCertificates = [Security.Cryptography.X509Certificates.X509Certificate2Collection]::new()
 
-          Write-CertificateSecret -Name 'leaf' -Base64Value $env:LEAF_BASE64 -Destination $allCertificates
-          Write-CertificateSecret -Name 'intermediate-1' -Base64Value $env:INTERMEDIATE_1_BASE64 -Destination $allCertificates
+          $certificateInputs = @(
+            @{ Name = 'leaf'; Value = $env:LEAF_BASE64 },
+            @{ Name = 'intermediate-1'; Value = $env:INTERMEDIATE_1_BASE64 }
+          )
 
           if (-not [string]::IsNullOrWhiteSpace($env:INTERMEDIATE_2_BASE64)) {
-            Write-CertificateSecret -Name 'intermediate-2' -Base64Value $env:INTERMEDIATE_2_BASE64 -Destination $allCertificates
+            $certificateInputs += @{ Name = 'intermediate-2'; Value = $env:INTERMEDIATE_2_BASE64 }
+          }
+
+          foreach ($certificateInput in $certificateInputs) {
+            $importedCertificates = @(
+              Import-CertificateSecret `
+                -Name $certificateInput.Name `
+                -Base64Value $certificateInput.Value
+            )
+
+            foreach ($certificate in $importedCertificates) {
+              [void]$allCertificates.Add($certificate)
+            }
           }
 
           if ($allCertificates.Count -eq 0) {
@@ -312,13 +353,29 @@ jobs:
           }
 
           $chainPath = Join-Path $env:RUNNER_TEMP 'code-signing-chain.p7b'
-          [IO.File]::WriteAllBytes(
-            $chainPath,
-            $allCertificates.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs7)
-          )
+          $chainBytes = $allCertificates.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs7)
+          if ($null -eq $chainBytes -or $chainBytes.Length -eq 0) {
+            throw 'Failed to export the Jsign certificate chain as PKCS#7.'
+          }
+          [IO.File]::WriteAllBytes($chainPath, $chainBytes)
 
+          $chain = Get-Item -LiteralPath $chainPath
+          if ($chain.Length -eq 0) {
+            throw "Exported Jsign certificate chain is empty: $chainPath"
+          }
+
+          $roundTripCertificates = [Security.Cryptography.X509Certificates.X509Certificate2Collection]::new()
+          $roundTripCertificates.Import($chainPath)
+          if ($roundTripCertificates.Count -eq 0) {
+            throw "Exported Jsign certificate chain could not be read back: $chainPath"
+          }
+
+          $chainHash = (Get-FileHash -Algorithm SHA256 -Path $chainPath).Hash.ToLowerInvariant()
           Add-Content -Path $env:GITHUB_ENV -Value "GCP_SIGNING_CERTIFICATE_CHAIN=$chainPath"
           Write-Host "Prepared Jsign PKCS#7 certificate chain with $($allCertificates.Count) certificate(s): $chainPath"
+          Write-Host "  Exported size: $($chain.Length) bytes"
+          Write-Host "  SHA256: $chainHash"
+          Write-Host "  Read-back certificate count: $($roundTripCertificates.Count)"
 
       - name: Set up Java for Jsign
         if: steps.windows-signing.outputs.enabled == 'true'

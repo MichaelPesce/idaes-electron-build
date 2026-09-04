@@ -5,31 +5,33 @@ on:
 
 jobs:
   test-electron-build:
+    name: ${{ matrix.project }}
+    permissions:
+      contents: read
     strategy:
-        fail-fast: false
-        matrix:
-            project: [watertap, prommis, idaes]
-            os-version: [macos-latest, windows-latest]
-            python-version: [3.12, 3.13]
-            include: 
-                - project: watertap
-                  pip-install-target: watertap@git+https://github.com/watertap-org/watertap@main
-                  artifact-name: WaterTAP-Flowsheet-Processor
-                - project: prommis
-                  pip-install-target: prommis@git+https://github.com/prommis/prommis@0.6.0rc0
-                  artifact-name: PROMMIS-Flowsheet-Processor
-                - project: idaes
-                  pip-install-target: idaes-pse@git+https://github.com/dangunter/idaes-pse@west_coast_wrapper
-                  artifact-name: IDAES-Flowsheet-Processor
-
-    name: ${{ matrix.project }} 
+      fail-fast: false
+      matrix:
+        project: [watertap, prommis, idaes]
+        os-version: [macos-latest, windows-latest]
+        python-version: [3.12, 3.13]
+        include:
+          - project: watertap
+            pip-install-target: watertap@git+https://github.com/watertap-org/watertap@main
+            artifact-name: WaterTAP-Flowsheet-Processor
+          - project: prommis
+            pip-install-target: prommis@git+https://github.com/prommis/prommis@0.6.0rc0
+            artifact-name: PROMMIS-Flowsheet-Processor
+          - project: idaes
+            pip-install-target: idaes-pse@git+https://github.com/dangunter/idaes-pse@west_coast_wrapper
+            artifact-name: IDAES-Flowsheet-Processor
     uses: ./.github/workflows/electron-build.yml
     with:
-        project: ${{ matrix.project }}
-        pip-install-target: ${{ matrix.pip-install-target }}
-        artifact-name: ${{ matrix.artifact-name }}-${{ matrix.python-version }}
-        idaes-flowsheet-processor-ui-repo: watertap-org/idaes-flowsheet-processor-ui
-        idaes-flowsheet-processor-ui-ref: main
-        os-version: ${{ matrix.os-version }}
-        python-version: ${{matrix.python-version}}
+      project: ${{ matrix.project }}
+      pip-install-target: ${{ matrix.pip-install-target }}
+      artifact-name: ${{ matrix.artifact-name }}-${{ matrix.python-version }}
+      idaes-flowsheet-processor-ui-repo: watertap-org/idaes-flowsheet-processor-ui
+      idaes-flowsheet-processor-ui-ref: main
+      os-version: ${{ matrix.os-version }}
+      python-version: ${{ matrix.python-version }}
+      sign-distribution: false
     secrets: inherit

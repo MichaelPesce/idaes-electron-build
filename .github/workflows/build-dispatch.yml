@@ -107,6 +107,7 @@ jobs:
       gcp-code-signing-workload-identity-provider: ${{ vars.GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER }}
       gcp-code-signing-service-account: ${{ vars.GCP_CODE_SIGNING_SERVICE_ACCOUNT }}
       gcp-code-signing-kms-key-version: ${{ vars.GCP_CODE_SIGNING_KMS_KEY_VERSION }}
-      google-kms-cng-version: ${{ vars.GOOGLE_KMS_CNG_VERSION || '1.4' }}
+      jsign-version: ${{ vars.JSIGN_VERSION || '7.5' }}
+      jsign-sha256: ${{ vars.JSIGN_SHA256 || '602a51c3545a6dc4fb99bd2ea7152b26d1345916d0c93ddfbd5936cb735af91c' }}
       windows-signing-timestamp-url: ${{ vars.WINDOWS_SIGNING_TIMESTAMP_URL || 'http://timestamp.digicert.com' }}
     secrets: inherit

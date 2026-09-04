@@ -1,6 +1,6 @@
 # Windows code signing with Google Cloud KMS
 
-This guide configures GitHub Actions to sign Windows Electron installers with Microsoft SignTool while the private key remains non-exportable in Google Cloud KMS Cloud HSM.
+This guide configures GitHub Actions to sign Windows Electron installers with Jsign and Google Cloud KMS, then verify the resulting Authenticode signature with Microsoft SignTool. The private key remains non-exportable in Google Cloud KMS Cloud HSM.
 
 It assumes that:
 
@@ -15,9 +15,9 @@ Certificate enrollment, certificate pickup, CSR generation, and initial KMS/HSM 
 
 1. GitHub Actions requests a short-lived OpenID Connect (OIDC) token.
 2. Google Cloud Workload Identity Federation exchanges that token for short-lived credentials for a dedicated service account.
-3. The Windows runner installs the Google Cloud KMS CNG Provider and configures it with one exact KMS key version.
-4. SignTool combines the public certificate with signing operations performed by the private key in Cloud HSM.
-5. SignTool requests an RFC 3161 timestamp and verifies the completed Authenticode signature.
+3. The Windows runner prepares a certificate chain file and downloads a pinned Jsign release.
+4. Jsign creates the Authenticode signature while the private-key operation is performed by Google Cloud KMS.
+5. Jsign requests an RFC 3161 timestamp, and SignTool verifies the completed Authenticode signature.
 
 No service-account JSON key, PFX file, or exportable private key is stored in GitHub.
 
@@ -45,6 +45,7 @@ Choose values for the following placeholders.
 | Full KMS key-version resource | `projects/my-code-signing-project/locations/global/keyRings/codesigning/cryptoKeys/windows-code-signing/cryptoKeyVersions/2` |
 | Leaf certificate | `code-signing.cer` |
 | Intermediate certificates | `intermediate1.cer`, optionally `intermediate2.cer` |
+| Jsign release | `7.5` |
 
 Always use the fully qualified, enabled KMS key version, including `/cryptoKeyVersions/N`. Pinning the version prevents a disabled or unintended version from being selected.
 
@@ -208,7 +209,8 @@ These four `GCP_CODE_SIGNING_*` values are Google Cloud resource identifiers, no
 | `GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER` | Full Workload Identity Provider resource name |
 | `GCP_CODE_SIGNING_SERVICE_ACCOUNT` | Signing service-account email |
 | `GCP_CODE_SIGNING_KMS_KEY_VERSION` | Full KMS key-version resource name |
-| `GOOGLE_KMS_CNG_VERSION` | Optional CNG Provider version, default `1.4` |
+| `JSIGN_VERSION` | Optional Jsign release version, default `7.5` |
+| `JSIGN_SHA256` | Optional SHA256 for the Jsign JAR, default pinned for Jsign `7.5` |
 | `WINDOWS_SIGNING_TIMESTAMP_URL` | Optional timestamp URL, default `http://timestamp.digicert.com` |
 
 If these identifiers are stored as secrets instead of variables, use the same names:
@@ -335,7 +337,7 @@ The leaf certificate must match the public key in the configured KMS key version
 
 If none of the required Google Cloud repository variables are present, the Windows build continues unsigned. This keeps forks without signing configuration usable, even if public certificate secrets are present. If only part of the Google Cloud repository variable configuration is present, or if those variables are present but required certificate secrets are missing, the workflow fails so misconfigured production repositories do not silently publish unsigned installers.
 
-To fail fast, the workflow checks signing configuration, validates service-account impersonation, validates KMS public-key access, decodes certificate files, installs the CNG Provider, writes `C:\Windows\KMSCNG\config.yaml`, and installs intermediate certificates immediately after checkout and before the application build. The final `google-github-actions/auth` step stays after the installer build and immediately before signing so short-lived OIDC-derived credentials are fresh when SignTool needs them.
+To fail fast, the workflow checks signing configuration, parses the configured KMS key version, validates service-account impersonation, validates KMS public-key access, prepares the certificate chain, installs Java, and downloads a checksum-verified Jsign JAR immediately after checkout and before the application build. The final `google-github-actions/auth` step stays after the installer build and immediately before signing so short-lived OIDC-derived credentials are fresh when Jsign needs them.
 
 The workflow signs the final NSIS installer at:
 
@@ -346,22 +348,23 @@ electron/dist/<artifact-name>_<build-number>_win64.exe
 The signing steps:
 
 1. Check the signing configuration.
-2. Run an early Google Cloud authentication preflight.
-3. Confirm the configured service account can read the KMS key version's public key.
-4. Decode the public certificate files into `RUNNER_TEMP`.
-5. Download and install the configured Google Cloud KMS CNG Provider release. The workflow supports both older direct `.msi` assets and the current `windows-amd64.zip` assets that contain `kmscng.msi`.
-6. Write `C:\Windows\KMSCNG\config.yaml` with the pinned KMS key version.
-7. Install the intermediate certificates into the current user's `CA` certificate store.
-8. Build the installer.
-9. Re-authenticate to Google Cloud with `google-github-actions/auth`.
-10. Run `signtool sign` with `/csp "Google Cloud KMS Provider"` and `/kc <full key version>`.
-11. Run `signtool verify` before uploading the artifact.
+2. Parse the full KMS key-version resource into the Jsign `--keystore` and `--alias` values.
+3. Run an early Google Cloud authentication preflight.
+4. Confirm the configured service account can read the KMS key version's public key.
+5. Decode the public certificate files into `RUNNER_TEMP` and create a PEM certificate-chain file for Jsign.
+6. Set up Java and download the pinned Jsign JAR.
+7. Build the installer.
+8. Re-authenticate to Google Cloud with `google-github-actions/auth`.
+9. Run `jsign` with `--storetype GOOGLECLOUD`, `--storepass env:GOOGLE_ACCESS_TOKEN`, the parsed KMS alias, and the certificate chain.
+10. Run `signtool verify` before uploading the artifact.
 
-Because `google-github-actions/auth` creates temporary `gha-creds-*.json` files in the workspace, `.gitignore` must include:
+The active workflow uses access-token outputs and does not create a Google credentials file. The backup CNG workflow can create temporary `gha-creds-*.json` files in the workspace, so `.gitignore` should include:
 
 ```text
 gha-creds-*.json
 ```
+
+The previous Google-documented CNG plus SignTool implementation is kept at `.github/workflows/electron-build-old.yaml`. It is not the default because Jsign avoids installing and configuring the Windows CNG provider on every GitHub-hosted runner. Keep it as a fallback because it works as-is, follows the Google-documented Windows path, and does not rely on Jsign.
 
 ## 4. Calling the reusable workflow directly
 
@@ -381,7 +384,8 @@ jobs:
       gcp-code-signing-workload-identity-provider: ${{ vars.GCP_CODE_SIGNING_WORKLOAD_IDENTITY_PROVIDER }}
       gcp-code-signing-service-account: ${{ vars.GCP_CODE_SIGNING_SERVICE_ACCOUNT }}
       gcp-code-signing-kms-key-version: ${{ vars.GCP_CODE_SIGNING_KMS_KEY_VERSION }}
-      google-kms-cng-version: ${{ vars.GOOGLE_KMS_CNG_VERSION || '1.4' }}
+      jsign-version: ${{ vars.JSIGN_VERSION || '7.5' }}
+      jsign-sha256: ${{ vars.JSIGN_SHA256 || '602a51c3545a6dc4fb99bd2ea7152b26d1345916d0c93ddfbd5936cb735af91c' }}
       windows-signing-timestamp-url: ${{ vars.WINDOWS_SIGNING_TIMESTAMP_URL || 'http://timestamp.digicert.com' }}
     secrets:
       GCP_CODE_SIGNING_CERTIFICATE_BASE64: ${{ secrets.GCP_CODE_SIGNING_CERTIFICATE_BASE64 }}
@@ -393,7 +397,7 @@ Use a protected GitHub environment for production signing if releases require ap
 
 ## Electron signing order
 
-The current workflow signs the final installer after `electron-builder` creates it. That matches the previous Azure signing behavior.
+The current workflow signs the final installer with Jsign after `electron-builder` creates it. That matches the previous Azure signing behavior.
 
 Signing only the final installer does not sign the executables and native libraries packaged inside it. A complete Electron release generally signs:
 
@@ -401,7 +405,7 @@ Signing only the final installer does not sign the executables and native librar
 2. the packaged application; and
 3. the final installer.
 
-Integrate the KMS-backed SignTool command with the Electron packager's Windows signing hook if inner application signatures become a release requirement. Do not recursively sign every third-party binary without understanding its ownership and existing signature.
+Integrate the KMS-backed Jsign command with the Electron packager's Windows signing hook if inner application signatures become a release requirement. Do not recursively sign every third-party binary without understanding its ownership and existing signature.
 
 ## Security checklist
 
@@ -438,17 +442,19 @@ If the renewed certificate reuses the same KMS key version, the KMS resource nam
 | Permission `iam.serviceAccounts.getAccessToken` denied | Confirm the service account has a `roles/iam.workloadIdentityUser` binding for the exact caller repository and that the Workload Identity Provider condition allows that repository. Use the GitHub repository name in `OWNER/REPO` form exactly as GitHub reports it. |
 | KMS permission is denied | Confirm the service account has `roles/cloudkms.signerVerifier` on the correct key and that the configured key version is enabled. |
 | Service-account impersonation is denied | Confirm the caller repository has a `roles/iam.workloadIdentityUser` binding on the service account using `principalSet://.../attribute.repository/OWNER/REPO`. |
-| CNG provider or key container is not found | Confirm the MSI installed successfully, `C:\Windows\KMSCNG\config.yaml` exists, and it contains the full key-version resource. |
-| Expected one MSI in CNG release and found 0 | Use a workflow version that supports the current `kmscng-<version>-windows-amd64.zip` release asset format, or set `GOOGLE_KMS_CNG_VERSION` to a release that publishes a direct MSI asset. |
+| Jsign download fails | Confirm `JSIGN_VERSION` exists as a Jsign release and that GitHub release downloads are reachable from the runner. |
+| Jsign checksum fails | Update `JSIGN_SHA256` only after intentionally changing `JSIGN_VERSION` and verifying the downloaded JAR out of band. |
+| Jsign cannot find the Google Cloud key | Confirm `GCP_CODE_SIGNING_KMS_KEY_VERSION` is the full key-version resource. The workflow parses it into Jsign `--keystore projects/PROJECT/locations/LOCATION/keyRings/KEYRING` and `--alias KEY/cryptoKeyVersions/VERSION`. |
 | SignTool reports a certificate/private-key mismatch | The leaf `.cer` belongs to a different public key or KMS key version. Recheck the certificate against the CSR and key version. |
-| Certificate chain is incomplete | Install every CA-supplied intermediate into the current user's `CA` store and verify again. |
-| Signature succeeds but timestamping fails | Confirm outbound access to the timestamp service and use `/tr` with `/td SHA256`. Do not publish an untimestamped release. |
+| Certificate chain is incomplete | Confirm every CA-supplied intermediate is stored in GitHub and that the Jsign certificate-chain step reports the expected certificate count. |
+| Signature succeeds but timestamping fails | Confirm outbound access to the timestamp service and use an RFC 3161 timestamp endpoint. Do not publish an untimestamped release. |
 | Installer is signed but the installed app is not | Add signing before packaging for the inner Electron executable and relevant native binaries. |
 
 ## References
 
+- [Jsign documentation](https://ebourg.github.io/jsign/)
+- [Jsign GitHub releases](https://github.com/ebourg/jsign/releases)
 - [Google Cloud: Use CNG Provider and SignTool to sign Windows artifacts](https://docs.cloud.google.com/kms/docs/reference/cng-signtool)
-- [Google Cloud KMS CNG Provider user guide](https://github.com/GoogleCloudPlatform/kms-integrations/blob/master/kmscng/docs/user_guide.md)
 - [Google Cloud: Workload Identity Federation with deployment pipelines](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines)
 - [Google GitHub Actions authentication](https://github.com/google-github-actions/auth)
 - [GitHub OIDC with reusable workflows](https://docs.github.com/actions/how-tos/secure-your-work/security-harden-deployments/oidc-with-reusable-workflows)

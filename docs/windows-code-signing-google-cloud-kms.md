@@ -6,7 +6,7 @@ It assumes that:
 
 - the Google Cloud project, HSM-backed asymmetric signing key, and enabled key version already exist;
 - a certificate authority has issued the code-signing certificate for that key;
-- the leaf certificate and CA intermediate certificates are available as `.cer` files; and
+- the leaf certificate and CA intermediate certificates are available as `.cer`, `.pem`, `.p7b`, or `.spc` files; and
 - an administrator can configure Google Cloud IAM and GitHub repository settings.
 
 Certificate enrollment, certificate pickup, CSR generation, and initial KMS/HSM key creation are intentionally out of scope.
@@ -308,7 +308,7 @@ Set these repository or protected-environment secrets in every repository that i
 | `GCP_CODE_SIGNING_INTERMEDIATE_1_BASE64` | Base64-encoded first intermediate certificate |
 | `GCP_CODE_SIGNING_INTERMEDIATE_2_BASE64` | Optional base64-encoded second intermediate certificate |
 
-The `.cer` files contain public certificates, not the private key. They are not confidential in the same way as a PFX file, but this workflow stores them as GitHub secrets so certificate rotation does not require a source change.
+These certificate files contain public certificates, not the private key. They are not confidential in the same way as a PFX file, but this workflow stores them as GitHub secrets so certificate rotation does not require a source change.
 
 On macOS, encode each certificate and copy it to the clipboard:
 

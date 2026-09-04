@@ -282,9 +282,8 @@ jobs:
                 }
 
                 foreach ($pemCertificate in $pemCertificates) {
-                  $certificateBytes = [Convert]::FromBase64String(
-                    $pemCertificate.Groups['body'].Value -replace '\s', ''
-                  )
+                  $pemBody = $pemCertificate.Groups['body'].Value -replace '\s', ''
+                  $certificateBytes = [Convert]::FromBase64String($pemBody)
                   $importedCertificates += [Security.Cryptography.X509Certificates.X509Certificate2]::new($certificateBytes)
                 }
               } elseif ($text -match '-----BEGIN (PKCS7|PKCS #7 SIGNED DATA)-----') {
@@ -297,7 +296,8 @@ jobs:
                   throw "Failed to parse ${Name} PEM PKCS#7 content."
                 }
 
-                $certificates.Import([Convert]::FromBase64String($pkcs7.Groups['body'].Value -replace '\s', ''))
+                $pkcs7Body = $pkcs7.Groups['body'].Value -replace '\s', ''
+                $certificates.Import([Convert]::FromBase64String($pkcs7Body))
               } else {
                 $certificates.Import($path)
               }

@@ -154,9 +154,6 @@ jobs:
         shell: pwsh
         env:
           GCP_KMS_KEY_VERSION: ${{ inputs.gcp-code-signing-kms-key-version || secrets.GCP_CODE_SIGNING_KMS_KEY_VERSION }}
-          CALLER_REPOSITORY: ${{ github.repository }}
-          CALLER_REF: ${{ github.ref }}
-          CALLER_WORKFLOW_REF: ${{ github.workflow_ref }}
         run: |
           $ErrorActionPreference = 'Stop'
 
@@ -179,17 +176,6 @@ jobs:
 
           Add-Content -Path $env:GITHUB_OUTPUT -Value "keystore=$keystore"
           Add-Content -Path $env:GITHUB_OUTPUT -Value "alias=$alias"
-
-          Write-Host 'Windows signing context'
-          Write-Host "  GitHub repository: $env:CALLER_REPOSITORY"
-          Write-Host "  GitHub ref: $env:CALLER_REF"
-          Write-Host "  GitHub workflow ref: $env:CALLER_WORKFLOW_REF"
-          Write-Host 'Parsed Google Cloud KMS key version'
-          Write-Host "  Project: $project"
-          Write-Host "  Location: $location"
-          Write-Host "  Key ring: $keyring"
-          Write-Host "  Crypto key: $key"
-          Write-Host "  Version: $version"
 
       - name: Preflight Google Cloud authentication
         id: google-auth-preflight
@@ -222,13 +208,7 @@ jobs:
           }
           $publicKeyUri = "https://cloudkms.googleapis.com/v1/$env:GCP_KMS_KEY_VERSION/publicKey"
 
-          $publicKey = Invoke-RestMethod -Method Get -Uri $publicKeyUri -Headers $headers
-          Write-Host 'Google Cloud KMS public key preflight succeeded.'
-          Write-Host "  Name: $($publicKey.name)"
-          Write-Host "  Algorithm: $($publicKey.algorithm)"
-          if ($publicKey.protectionLevel) {
-            Write-Host "  Protection level: $($publicKey.protectionLevel)"
-          }
+          Invoke-RestMethod -Method Get -Uri $publicKeyUri -Headers $headers | Out-Null
 
       - name: Prepare Jsign certificate chain
         if: steps.windows-signing.outputs.enabled == 'true'
@@ -265,13 +245,10 @@ jobs:
 
             $certificates = [Security.Cryptography.X509Certificates.X509Certificate2Collection]::new()
             $importedCertificates = @()
-            $bytes = [IO.File]::ReadAllBytes($path)
-            $text = [Text.Encoding]::ASCII.GetString($bytes)
-            $detectedFormat = 'DER certificate or DER PKCS#7'
+            $text = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($path))
 
             try {
               if ($text -match '-----BEGIN CERTIFICATE-----') {
-                $detectedFormat = 'PEM certificate'
                 $pemCertificates = [regex]::Matches(
                   $text,
                   '-----BEGIN CERTIFICATE-----\s*(?<body>[A-Za-z0-9+/=\r\n]+?)\s*-----END CERTIFICATE-----'
@@ -287,7 +264,6 @@ jobs:
                   $importedCertificates += [Security.Cryptography.X509Certificates.X509Certificate2]::new($certificateBytes)
                 }
               } elseif ($text -match '-----BEGIN (PKCS7|PKCS #7 SIGNED DATA)-----') {
-                $detectedFormat = 'PEM PKCS#7'
                 $pkcs7 = [regex]::Match(
                   $text,
                   '-----BEGIN (?:PKCS7|PKCS #7 SIGNED DATA)-----\s*(?<body>[A-Za-z0-9+/=\r\n]+?)\s*-----END (?:PKCS7|PKCS #7 SIGNED DATA)-----'
@@ -313,13 +289,6 @@ jobs:
               foreach ($certificate in $certificates) {
                 $importedCertificates += $certificate
               }
-            }
-
-            Write-Host "${Name} certificate material detected as $detectedFormat; decoded byte length: $($bytes.Length)"
-            Write-Host "Imported $($importedCertificates.Count) certificate(s) from ${Name}."
-
-            foreach ($certificate in $importedCertificates) {
-              Write-Host "Certificate ${Name}: subject=$($certificate.Subject); issuer=$($certificate.Issuer); thumbprint=$($certificate.Thumbprint); expires=$($certificate.NotAfter.ToUniversalTime().ToString('u'))"
             }
 
             return $importedCertificates
@@ -359,23 +328,8 @@ jobs:
           }
           [IO.File]::WriteAllBytes($chainPath, $chainBytes)
 
-          $chain = Get-Item -LiteralPath $chainPath
-          if ($chain.Length -eq 0) {
-            throw "Exported Jsign certificate chain is empty: $chainPath"
-          }
-
-          $roundTripCertificates = [Security.Cryptography.X509Certificates.X509Certificate2Collection]::new()
-          $roundTripCertificates.Import($chainPath)
-          if ($roundTripCertificates.Count -eq 0) {
-            throw "Exported Jsign certificate chain could not be read back: $chainPath"
-          }
-
-          $chainHash = (Get-FileHash -Algorithm SHA256 -Path $chainPath).Hash.ToLowerInvariant()
           Add-Content -Path $env:GITHUB_ENV -Value "GCP_SIGNING_CERTIFICATE_CHAIN=$chainPath"
           Write-Host "Prepared Jsign PKCS#7 certificate chain with $($allCertificates.Count) certificate(s): $chainPath"
-          Write-Host "  Exported size: $($chain.Length) bytes"
-          Write-Host "  SHA256: $chainHash"
-          Write-Host "  Read-back certificate count: $($roundTripCertificates.Count)"
 
       - name: Set up Java for Jsign
         if: steps.windows-signing.outputs.enabled == 'true'
@@ -419,7 +373,6 @@ jobs:
 
           Add-Content -Path $env:GITHUB_OUTPUT -Value "path=$jarPath"
 
-          & java -version
           & java -jar $jarPath --version
 
       - uses: conda-incubator/setup-miniconda@v3
@@ -638,17 +591,10 @@ jobs:
             throw "Jsign certificate chain does not exist: $env:GCP_SIGNING_CERTIFICATE_CHAIN"
           }
 
-          $artifact = Get-Item -LiteralPath $env:ARTIFACT_PATH
-          $artifactHash = (Get-FileHash -Algorithm SHA256 -Path $env:ARTIFACT_PATH).Hash.ToLowerInvariant()
           Write-Host "Signing artifact: $env:ARTIFACT_PATH"
-          Write-Host "  Size: $($artifact.Length) bytes"
-          Write-Host "  SHA256 before signing: $artifactHash"
-          Write-Host "  Jsign keystore: $env:JSIGN_KEYSTORE"
-          Write-Host "  Jsign alias: $env:JSIGN_ALIAS"
           Write-Host "  Timestamp URL: $env:TIMESTAMP_URL"
 
           $jsignArgs = @(
-            '--verbose',
             '--storetype', 'GOOGLECLOUD',
             '--keystore', $env:JSIGN_KEYSTORE,
             '--storepass', 'env:GOOGLE_ACCESS_TOKEN',
@@ -667,9 +613,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "Jsign failed with exit code $LASTEXITCODE."
           }
-
-          $signedHash = (Get-FileHash -Algorithm SHA256 -Path $env:ARTIFACT_PATH).Hash.ToLowerInvariant()
-          Write-Host "SHA256 after signing: $signedHash"
 
       - name: Verify Windows signature with SignTool
         if: steps.windows-signing.outputs.enabled == 'true'

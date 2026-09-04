@@ -275,7 +275,7 @@ jobs:
                   '-----BEGIN PKCS7-----\s*(?<body>[A-Za-z0-9+/=\r\n]+?)\s*-----END PKCS7-----'
                 )
                 if (-not $pkcs7.Success) {
-                  throw "Failed to parse $Name PEM PKCS#7 content."
+                  throw "Failed to parse ${Name} PEM PKCS#7 content."
                 }
 
                 $certificates.Import([Convert]::FromBase64String($pkcs7.Groups['body'].Value -replace '\s', ''))
@@ -283,18 +283,18 @@ jobs:
                 $certificates.Import($path)
               }
             } catch {
-              throw "Failed to import $Name certificate material. Store the base64 of a .cer, .pem, .p7b, or .spc file: $($_.Exception.Message)"
+              throw "Failed to import ${Name} certificate material. Store the base64 of a .cer, .pem, .p7b, or .spc file: $($_.Exception.Message)"
             }
 
             if ($certificates.Count -eq 0) {
-              throw "No certificates were found in $Name certificate material."
+              throw "No certificates were found in ${Name} certificate material."
             }
 
-            Write-Host "Imported $($certificates.Count) certificate(s) from $Name."
+            Write-Host "Imported $($certificates.Count) certificate(s) from ${Name}."
 
             foreach ($certificate in $certificates) {
               [void]$Destination.Add($certificate)
-              Write-Host "Certificate $Name: subject=$($certificate.Subject); issuer=$($certificate.Issuer); thumbprint=$($certificate.Thumbprint); expires=$($certificate.NotAfter.ToUniversalTime().ToString('u'))"
+              Write-Host "Certificate ${Name}: subject=$($certificate.Subject); issuer=$($certificate.Issuer); thumbprint=$($certificate.Thumbprint); expires=$($certificate.NotAfter.ToUniversalTime().ToString('u'))"
             }
           }
 
